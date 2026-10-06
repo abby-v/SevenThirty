@@ -1,0 +1,49 @@
+name: Pricing job
+
+# Pulls native GBP list prices from the Azure Retail Prices API every morning,
+# validates them against the previous snapshot and commits the new snapshot.
+# If validation fails nothing is committed and the site keeps the last good
+# snapshot; the failed run is the alert.
+
+on:
+  schedule:
+    - cron: '17 5 * * *' # 05:17 UTC daily
+  workflow_dispatch:
+    inputs:
+      accept_changes:
+        description: 'Accept price moves above the 20% threshold (after checking them)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pricing
+  cancel-in-progress: false
+
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Fetch, normalise and validate GBP prices
+        run: npm run prices -- ${{ inputs.accept_changes && '--accept-changes' || '' }}
+      - name: Unit and golden tests against the new snapshot
+        run: npm test
+      - name: Commit snapshot
+        run: |
+          if git diff --quiet -- public/prices && [ -z "$(git ls-files --others --exclude-standard public/prices)" ]; then
+            echo "No price changes."
+            exit 0
+          fi
+          git config user.name "seventhirty-pricing"
+          git config user.email "seventhirty-pricing@users.noreply.github.com"
+          git add public/prices
+          git commit -m "Price snapshot $(date -u +%Y-%m-%d)"
+          git push
