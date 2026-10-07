@@ -196,7 +196,9 @@ def meter_rules():
         for red in ("LRS", "ZRS", "GRS"):
             r.append((f"blob_{tier}_{red}", _m("Storage", "General Block Blob v2", f"{tier} {red}", f"{tier} {red} Data Stored"), True))
             r.append((f"blobw_{tier}_{red}", _m("Storage", "General Block Blob v2", f"{tier} {red}", f"{tier} {red} Write Operations"), False))
-        r.append((f"blobr_{tier}", _m("Storage", "General Block Blob v2", f"{tier} LRS", f"{tier} Read Operations"), False))
+        # Hot/Cool/Archive name the read meter "<tier> Read Operations"; Cold names it "Cold LRS Read Operations".
+        r.append((f"blobr_{tier}", lambda i, t=tier: i.get("serviceName") == "Storage" and i.get("productName") == "General Block Blob v2"
+                  and i.get("skuName") == f"{t} LRS" and i.get("meterName") in (f"{t} Read Operations", f"{t} LRS Read Operations"), False))
     r += [(f"files_prem_{red}", _m("Storage", "Premium Files", f"Premium {red}", f"Premium {red} Provisioned"), False) for red in ("LRS", "ZRS")]
     r += [
         ("aks_std", _m("Azure Kubernetes Service", "Azure Kubernetes Service", "Standard", "Standard Uptime SLA"), False),
