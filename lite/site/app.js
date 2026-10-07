@@ -144,6 +144,8 @@ function rateLookup(region){
     if(R[region]&&R[region][key]!=null)return {v:R[region][key],src:"region",key,verify:VERIFY.has(key)&&!SNAP.imported};
     if(zone&&R[zone]&&R[zone][key]!=null)return {v:R[zone][key],src:"global",key,verify:VERIFY.has(key)&&!SNAP.imported};
     if(R.global&&R.global[key]!=null)return {v:R.global[key],src:"global",key};
+    if(R[""]&&R[""][key]!=null)return {v:R[""][key],src:"global",key};
+    if(R!==BUILTIN.regions){const B=BUILTIN.regions;for(const p of [region,zone,"global"]){if(p&&B[p]&&B[p][key]!=null)return {v:B[p][key],src:"proxy",key,from:"snapshot"};}}
     for(const p of ["uksouth","Zone 1"]){const P=R[p]||BUILTIN.regions[p];if(P&&P[key]!=null)return {v:P[key],src:"proxy",key,from:p};}
     return {v:0,src:"missing",key};
   };
@@ -535,7 +537,7 @@ function updateCfg(){
   $("cfgPrice").innerHTML=`${gbp(res.amt)} <small>/ month</small>`;
   const notes=[...(def.notes?def.notes(res.c,res.h,{region:it.region},res.lines):[])];
   if(def.pause===false&&res.h&&res.h.v<730)notes.unshift({t:"note",x:`${def.name} has no stopped state. ${n(res.h.v)} h is only right if you delete and redeploy it on a schedule; otherwise use 730.`});
-  if(res.lines.some(l=>l.srcs.some(s=>s.src==="proxy")))notes.unshift({t:"note",x:`Some rates aren't loaded for ${regionName(it.region)}, so UK South or Zone 1 rates stand in. Load a rates file that includes ${it.region} before sharing.`});
+  if(res.lines.some(l=>l.srcs.some(s=>s.src==="proxy")))notes.unshift({t:"note",x:`Some rates aren't in today's price data for ${regionName(it.region)}, so a stand-in is used and flagged. Check the flagged lines before sharing.`});
   if(res.lines.some(l=>l.srcs.some(s=>s.src==="missing")))notes.unshift({t:"note",x:"A line has no published rate in the loaded price data and is costed at £0. Load a rates file, or enter the rate under Rates used."});
   $("cfgNotes").innerHTML=notes.map(x=>`<p class="${x.t}">${esc(x.x)}</p>`).join("");
   renderRates(res,it.region);
@@ -544,7 +546,7 @@ function ledgerLi(l){const f=[];if(l.srcs.some(s=>s.src==="missing"))f.push('<sp
   if(l.srcs.some(s=>s.verify))f.push('<span class="flag verify">verify</span>');if(l.srcs.some(s=>s.src==="manual"&&s.key))f.push('<span class="flag edit">edited rate</span>');
   return `<li><span class="kind ${l.kind}">${l.kind}</span><span class="what">${esc(l.what)}${f.join("")}</span><span class="calc">${esc(l.calc)}</span><span class="amt">${gbp(l.amt)}</span></li>`;}
 function renderRates(res,region){const t=$("ratesTable");if(!t)return;const seen=new Map();res.lines.forEach(l=>l.srcs.forEach(s=>{if(s.key&&!seen.has(s.key))seen.set(s.key,s);}));
-  t.innerHTML=seen.size?[...seen.values()].map(s=>{const k=s.key;const tiered=Array.isArray(s.v);const src=s.src==="region"?"regional":s.src==="global"?"global or zone":s.src==="proxy"?`stand-in from ${s.from==="Zone 1"?"Zone 1":regionName(s.from)}`:s.src==="manual"?"edited":"missing";
+  t.innerHTML=seen.size?[...seen.values()].map(s=>{const k=s.key;const tiered=Array.isArray(s.v);const src=s.src==="region"?"regional":s.src==="global"?"global or zone":s.src==="proxy"?`stand-in from ${s.from==="snapshot"?"the built-in snapshot":s.from==="Zone 1"?"Zone 1":regionName(s.from)}`:s.src==="manual"?"edited":"missing";
     return `<tr><td>${esc(k.replace(/_/g," "))} <span class="u">${esc(src)}</span></td><td>${tiered?`<span class="u">tiered: ${s.v.map(x=>money(x[1])).join(" → ")}</span>`:`<label class="sr" for="rate-${k}">${esc(k)} in pounds</label><input id="rate-${k}" type="number" step="any" min="0" data-rate="${k}" value="${scalar(s.v)}" class="${s.src==="manual"?"changed":""}">`}</td></tr>`;}).join(""):`<tr><td>No rates used yet.</td></tr>`;}
 
 /* ---- Catalogue and manual views ---- */
@@ -710,7 +712,7 @@ const IDB={db:null,open(){return new Promise((res,rej)=>{try{const r=indexedDB.o
   async set(k,v){try{const db=this.db||await this.open();await new Promise(res=>{const t=db.transaction("kv","readwrite");t.objectStore("kv").put(v,k);t.oncomplete=res;t.onerror=res;});}catch(e){}}};
 function applyPrices(obj,quiet,live){
   if(String(obj.currency||"").toUpperCase()!=="GBP"){toast(`That file is priced in ${obj.currency||"an unknown currency"}. SevenThirty needs GBP prices.`);return;}
-  const merged={};const keys=new Set([...Object.keys(BUILTIN.regions),...Object.keys(obj.regions||{})]);keys.forEach(k=>{merged[k]=Object.assign({},BUILTIN.regions[k]||{},(obj.regions||{})[k]||{});});
+  const merged=live==="seed"?BUILTIN.regions:Object.assign({},obj.regions||{});
   SNAP={generated:obj.generated,generatedAt:obj.generatedAt,currency:"GBP",source:obj.source,imported:live!=="seed",live:live===true,regions:merged};if(!live)store.set("st-snapshot2",SNAP);
   if(obj.catalog&&obj.catalog.scopes){CAT={generated:obj.generated,strings:obj.catalog.strings,scopes:obj.catalog.scopes};catIndex=null;IDB.set("catalog",CAT);}
   full();if(!quiet){const regs=Object.keys(obj.regions||{}).filter(k=>k&&k!=="global"&&!/^Zone/.test(k)).map(regionName);toast(`Loaded ${fmtDate(obj.generated)} prices${regs.length?` for ${regs.join(", ")}`:""}${obj.catalog?", with the full catalogue":""}`);}

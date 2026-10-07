@@ -8,3 +8,4 @@ playwright-report
 *.tfstate
 *.tfstate.*
 .terraform.lock.hcl
+__pycache__/

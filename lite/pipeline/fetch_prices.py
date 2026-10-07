@@ -289,7 +289,9 @@ def fetch_scope(scope: str, catalog: bool) -> list[dict]:
 # ---------------------------------------------------------------- rates
 
 def build_rates(items: list[dict]) -> dict:
-    items = [i for i in items if i.get("isPrimaryMeterRegion", True)]
+    # Keep non-primary rows here: Microsoft marks a region's copy of a shared meter (public IPs,
+    # VPN Gateway, DNS…) as non-primary, but it is still that region's price. Within one region
+    # there is only one row per meter, so nothing is double counted.
     cons = [i for i in items if i.get("type") == "Consumption"]
     out: dict = {}
     for key, pred, tiered in meter_rules():
