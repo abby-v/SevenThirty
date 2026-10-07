@@ -495,6 +495,11 @@ def site_data(args) -> int:
             catalog[key] = build_catalog_rows(items, strings)
             print(f"  {label}: {len(catalog[key]):,} meters", file=sys.stderr)
 
+    if os.environ.get("GITHUB_ACTIONS"):
+        counts = ", ".join(f"{k or '(none)'}={len(v)}" for k, v in prices["regions"].items())
+        cat = sum(len(v) for v in catalog.values())
+        print(f"::notice title=Prices fetched::guided rates per region: {counts}; catalogue meters: {cat:,}")
+
     # Sanity checks before anything is replaced
     problems = []
     for r in rate_regions:
@@ -506,9 +511,21 @@ def site_data(args) -> int:
     if os.path.exists(prev_path):
         with open(prev_path, encoding="utf-8") as f:
             previous = json.load(f)
+    # The bundled seed snapshot isn't a pipeline output (different meter matching), so don't compare against it.
+    man_path = os.path.join(out_dir, "manifest.json")
+    if previous and os.path.exists(man_path):
+        with open(man_path, encoding="utf-8") as f:
+            if json.load(f).get("seed"):
+                print("Previous data is the bundled seed snapshot; skipping the comparison this once.", file=sys.stderr)
+                previous = None
     problems += validate(prices, previous, args.max_change)
     if problems and not args.force:
         print("Validation failed; the website keeps yesterday's prices:", *problems, sep="\n  ", file=sys.stderr)
+        if os.environ.get("GITHUB_ACTIONS"):
+            for p_ in problems[:40]:
+                print(f"::error title=Price validation::{p_}")
+            if len(problems) > 40:
+                print(f"::error title=Price validation::…and {len(problems) - 40} more")
         print("Re-run with --force once you've checked the changes are real.", file=sys.stderr)
         return 2
 
