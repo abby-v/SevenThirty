@@ -1,0 +1,59 @@
+name: Lite prices
+
+# Refreshes SevenThirty Lite (lite/) from the Azure Retail Prices API every day at
+# 06:00 UTC (06:00 GMT; 07:00 UK time during BST). On success it commits the new
+# price data, and "Preview on GitHub Pages" republishes both apps.
+# If validation fails nothing is committed; the site keeps yesterday's prices and the
+# failed run is the alert.
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Publish even if prices moved more than 25% (after checking the run log)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lite-prices
+  cancel-in-progress: false
+
+jobs:
+  prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      PRICE_REGIONS: ${{ vars.LITE_PRICE_REGIONS || 'uksouth ukwest northeurope westeurope' }}
+      CATALOGUE_REGIONS: ${{ vars.LITE_CATALOGUE_REGIONS || 'uksouth ukwest' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Fetch latest GBP prices from Microsoft
+        run: |
+          python lite/pipeline/fetch_prices.py \
+            --site-data lite/site/data \
+            --catalog-regions "$CATALOGUE_REGIONS" \
+            ${{ inputs.force && '--force' || '' }} \
+            $PRICE_REGIONS
+
+      - name: Commit price data
+        run: |
+          git config user.name "seventhirty-pricing"
+          git config user.email "seventhirty-pricing@users.noreply.github.com"
+          git add lite/site/data
+          if git diff --cached --quiet; then
+            echo "No price changes."
+            exit 0
+          fi
+          git commit -m "Lite prices $(date -u +%Y-%m-%d)"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

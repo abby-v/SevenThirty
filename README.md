@@ -141,3 +141,7 @@ e2e/                Playwright and axe tests
 ## Disclaimer
 
 SevenThirty is an independent tool and is not affiliated with or endorsed by Microsoft. Its estimates are indicative and use Microsoft retail list prices in GBP for the stated region on the stated date. Actual charges depend on configuration, usage, agreement type and discounts. Prices exclude VAT.
+
+## SevenThirty Lite
+
+A second, dependency-free version lives in [`lite/`](lite/README.md) and is published at `/lite/` on the same GitHub Pages site. Its prices refresh daily at 06:00 GMT via `.github/workflows/lite-prices.yml`.

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Azure cost estimates in native GBP for MSP consultants: pick services, see the working on every line, and export a client-ready ACR forecast. Prices refresh daily from Microsoft's Azure Retail Prices API.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<title>SevenThirty</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* base reset (the hosted page has no wrapper skeleton) */
+html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+
+/* Layout: three-pane estimator. Service menu (pick) → configurator (shape, see the working) → estimate sheet (collect, total, export). */
+:root{
+  --bg:#EEF1F5; --surface:#FBFCFD; --sunken:#E3E8EF; --ink:#141B26; --muted:#556172; --rule:#CDD4DE;
+  --accent:#2347B8; --accent-ink:#FFFFFF; --accent-soft:#DFE6FA;
+  --standing:#8A5300; --standing-soft:#F7E8CC; --usage:#126B5C; --usage-soft:#D2ECE6;
+  --warn-bg:#FFF3D9; --warn-ink:#6A4100; --flag-bg:#FBE4E1; --flag-ink:#8C2A1C;
+  --display:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --body:"Schibsted Grotesk","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F141B; --surface:#171E28; --sunken:#0B1016; --ink:#E5EAF1; --muted:#97A3B4; --rule:#2B3644;
+  --accent:#86A4FF; --accent-ink:#0B1226; --accent-soft:#1D2A4B;
+  --standing:#E6AA45; --standing-soft:#3A2B10; --usage:#52C7AF; --usage-soft:#10322C;
+  --warn-bg:#382A10; --warn-ink:#F1CC86; --flag-bg:#3A1C17; --flag-ink:#F4A99C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F141B; --surface:#171E28; --sunken:#0B1016; --ink:#E5EAF1; --muted:#97A3B4; --rule:#2B3644;
+  --accent:#86A4FF; --accent-ink:#0B1226; --accent-soft:#1D2A4B;
+  --standing:#E6AA45; --standing-soft:#3A2B10; --usage:#52C7AF; --usage-soft:#10322C;
+  --warn-bg:#382A10; --warn-ink:#F1CC86; --flag-bg:#3A1C17; --flag-ink:#F4A99C; color-scheme:dark}
+
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.wrap{max-width:1480px;margin:0 auto;padding-inline:20px}
+@media (max-width:480px){.wrap{padding-inline:16px}}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* Top bar */
+.mast{padding-block:16px 14px;border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.mark{font-family:var(--mono);font-weight:600;font-size:15px;background:var(--ink);color:var(--bg);padding:6px 8px;border-radius:4px}
+.brand h1{margin:0;font-family:var(--display);font-weight:800;font-size:1.4rem;letter-spacing:-.02em;line-height:1}
+.brand p{margin:3px 0 0;color:var(--muted);font-size:.82rem}
+.hours{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.hours .lbl{font-weight:600;font-size:.85rem}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--rule);border-radius:9px;overflow:hidden;background:var(--surface);max-width:100%}
+.seg button{border:0;background:transparent;padding:6px 12px;cursor:pointer;display:flex;align-items:baseline;gap:6px;border-right:1px solid var(--rule);min-height:36px}
+.seg button:last-child{border-right:0}
+.seg .n{font-family:var(--mono);font-size:1.15rem;font-weight:500;line-height:1}
+.seg .t{font-size:.75rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg button[aria-pressed="true"] .t{color:inherit;opacity:.85}
+.seg input{width:4.2ch;border:0;border-bottom:1px dashed currentColor;background:transparent;font-family:var(--mono);font-size:1.15rem;font-weight:500;line-height:1;padding:0;text-align:right}
+.status{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:.78rem;color:var(--muted)}
+.chip b{color:var(--ink);font-weight:600}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--usage);flex:none}
+.btn{border:1px solid var(--rule);background:var(--surface);border-radius:6px;padding:7px 12px;cursor:pointer;font-size:.85rem;font-weight:500;min-height:34px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:3px 9px;min-height:28px;font-size:.8rem}
+.btn.big{padding:10px 18px;font-size:.95rem;font-weight:600}
+
+/* Three panes */
+.app{display:grid;grid-template-columns:232px minmax(0,1fr) 380px;gap:24px;padding-block:20px 60px;align-items:start}
+@media (max-width:1180px){.app{grid-template-columns:200px minmax(0,1fr)}.sheetcol{grid-column:1/-1}}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr)}}
+
+/* Menu */
+nav.menu{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));max-height:calc(100vh - 24px);overflow:auto;padding-right:4px}
+@media (max-width:760px){nav.menu{position:static;max-height:none}}
+.msec{margin-bottom:14px}
+.msec h2{margin:0 0 4px;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);display:flex;justify-content:space-between;gap:8px;padding-inline:8px}
+.msec h2 span{font-family:var(--mono);letter-spacing:0;text-transform:none;color:var(--ink);font-weight:500}
+.msec ul{list-style:none;margin:0;padding:0}
+.mbtn{display:flex;width:100%;text-align:left;border:0;background:transparent;border-radius:6px;padding:6px 8px;cursor:pointer;gap:8px;justify-content:space-between;align-items:baseline;font-size:.9rem;min-height:32px}
+.mbtn:hover{background:var(--sunken)}
+.mbtn[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--accent)}
+.mbtn .cnt{font-family:var(--mono);font-size:.72rem;color:var(--muted);background:var(--sunken);border-radius:999px;padding:0 6px}
+.mbtn.more{color:var(--accent);font-size:.84rem}
+@media (max-width:760px){
+  nav.menu{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+  .msec{flex:none;margin:0;background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:8px;min-width:200px}
+}
+
+/* Configurator */
+.cfg{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:22px;min-width:0}
+.crumb{font-size:.75rem;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);font-weight:600}
+.cfg h2{margin:2px 0 4px;font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:-.02em;line-height:1.15;text-wrap:balance}
+.cfg .lead{margin:0;color:var(--muted);max-width:68ch}
+.editing{margin:12px 0 0;padding:8px 12px;border-radius:8px;background:var(--accent-soft);font-size:.85rem;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px;align-items:center}
+.presets span{font-size:.8rem;color:var(--muted);margin-right:4px}
+.preset{border:1px solid var(--rule);background:var(--bg);border-radius:999px;padding:4px 12px;font-size:.82rem;cursor:pointer;min-height:30px}
+.preset:hover{border-color:var(--accent)}
+.preset[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px 16px;margin-top:18px}
+.field{display:flex;flex-direction:column;gap:5px;font-size:.8rem;color:var(--muted);font-weight:500;min-width:0}
+.field .fl{color:var(--ink);font-weight:600;font-size:.85rem}
+.field .u{font-weight:400;color:var(--muted)}
+.field input,.field select{border:1px solid var(--rule);background:var(--bg);border-radius:7px;padding:8px 10px;font-size:.95rem;color:var(--ink);min-width:0;width:100%;min-height:40px}
+.field input[type=number]{font-family:var(--mono)}
+.field .hint{font-weight:400;font-size:.76rem;line-height:1.35}
+.field.wide{grid-column:span 2}
+@media (max-width:480px){.field.wide{grid-column:auto}}
+details.more{margin-top:16px;border-top:1px dashed var(--rule);padding-top:10px}
+details.more summary{cursor:pointer;font-weight:600;font-size:.88rem;color:var(--accent)}
+.note{margin:14px 0 0;padding:9px 12px;border-radius:8px;background:var(--warn-bg);color:var(--warn-ink);font-size:.84rem;max-width:76ch}
+.tip{margin:14px 0 0;padding:9px 12px;border-radius:8px;background:var(--accent-soft);font-size:.84rem;max-width:76ch}
+.ledger{margin:18px 0 0;padding:0;list-style:none;border:1px solid var(--rule);border-radius:10px;background:var(--bg);overflow-x:auto}
+.ledger li{display:grid;grid-template-columns:5.8rem minmax(9rem,1fr) auto 7.5rem;gap:4px 12px;align-items:baseline;padding:9px 12px;border-top:1px solid var(--rule);min-width:560px}
+.ledger li:first-child{border-top:0}
+.ledger li.total{font-weight:600;background:var(--surface)}
+.kind{font-size:.68rem;font-weight:600;padding:1px 7px;border-radius:4px;letter-spacing:.03em;text-transform:uppercase;justify-self:start}
+.kind.standing{background:var(--standing-soft);color:var(--standing)}
+.kind.usage{background:var(--usage-soft);color:var(--usage)}
+.ledger .what{font-size:.88rem}
+.ledger .calc{font-family:var(--mono);font-size:.78rem;color:var(--muted);white-space:nowrap}
+.ledger .amt{font-family:var(--mono);font-size:.88rem;font-weight:500;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ledger .empty{grid-template-columns:1fr;color:var(--muted);font-size:.85rem}
+.flag{font-size:.68rem;border-radius:3px;padding:0 5px;margin-left:6px;white-space:nowrap;background:var(--flag-bg);color:var(--flag-ink)}
+.flag.verify{background:var(--warn-bg);color:var(--warn-ink)}
+.flag.edit{background:var(--standing-soft);color:var(--standing)}
+.cta{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-top:18px;padding-top:16px;border-top:1px solid var(--rule)}
+.cta .price{font-family:var(--mono);font-size:1.7rem;font-weight:500;letter-spacing:-.03em}
+.cta .price small{font-size:.85rem;color:var(--muted);letter-spacing:0;font-family:var(--body)}
+.cta .acts{display:flex;gap:8px;flex-wrap:wrap}
+details.rates{margin-top:14px}
+details.rates summary{cursor:pointer;font-size:.84rem;color:var(--muted)}
+.rt{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:8px}
+.rt td{padding:5px 0;border-top:1px solid var(--rule);vertical-align:middle}
+.rt td:last-child{text-align:right;white-space:nowrap}
+.rt input{width:9ch;font-family:var(--mono);font-size:.8rem;border:1px solid var(--rule);background:var(--bg);border-radius:4px;padding:3px 6px;text-align:right}
+.rt input.changed{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.rt .u{color:var(--muted);font-size:.72rem}
+
+/* Catalogue search */
+.search{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.search input,.search select{border:1px solid var(--rule);background:var(--bg);border-radius:7px;padding:8px 10px;font-size:.92rem;min-width:0;min-height:40px}
+.search input{flex:1 1 260px}
+.search select{flex:0 1 220px}
+.results{list-style:none;margin:10px 0 0;padding:0;max-height:420px;overflow:auto;border:1px solid var(--rule);border-radius:10px;background:var(--bg)}
+.results li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:8px 12px;border-top:1px solid var(--rule);font-size:.84rem}
+.results li:first-child{border-top:0}
+.results .rn{font-weight:600;overflow-wrap:anywhere}
+.results .rm{color:var(--muted);font-size:.78rem;overflow-wrap:anywhere}
+.results .rp{font-family:var(--mono);font-size:.8rem;white-space:nowrap;text-align:right}
+.results .rp small{display:block;color:var(--usage);font-size:.7rem}
+.results .none{color:var(--muted)}
+.catstat{font-size:.84rem;color:var(--muted);margin:10px 0 0}
+.catstat b{color:var(--ink)}
+
+/* Estimate sheet */
+.sheetcol{position:sticky;top:calc(12px + env(safe-area-inset-top,0px));display:flex;flex-direction:column;gap:14px;min-width:0}
+@media (max-width:1180px){.sheetcol{position:static}}
+.sheet{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:18px}
+.sheet h2{font-size:.74rem;margin:0;font-weight:600;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.meta input,.meta select{border:1px solid var(--rule);background:var(--bg);border-radius:6px;padding:6px 8px;font-size:.85rem;width:100%;min-width:0;min-height:34px}
+.big{font-family:var(--mono);font-size:2.2rem;font-weight:500;letter-spacing:-.04em;line-height:1.1;margin:12px 0 2px;font-variant-numeric:tabular-nums}
+.big small{font-size:.85rem;letter-spacing:0;color:var(--muted);font-weight:400;font-family:var(--body)}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.kpi{background:var(--sunken);border-radius:8px;padding:8px 10px;min-width:0}
+.kpi span{display:block;font-size:.72rem;color:var(--muted)}
+.kpi b{font-family:var(--mono);font-weight:500;font-size:.98rem;font-variant-numeric:tabular-nums}
+.split{display:flex;height:8px;border-radius:4px;overflow:hidden;margin:12px 0 6px;background:var(--rule)}
+.split .s{background:var(--standing)} .split .u{background:var(--usage)}
+.legend{display:flex;justify-content:space-between;gap:8px;font-size:.78rem;flex-wrap:wrap}
+.legend b{font-family:var(--mono);font-weight:500}
+.sw{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.groups{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.grp h3{margin:0;display:flex;justify-content:space-between;gap:8px;font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;border-bottom:2px solid var(--ink);padding-bottom:4px}
+.grp h3 span:last-child{font-family:var(--mono);letter-spacing:0;font-weight:500}
+.grp ul{list-style:none;margin:0;padding:0}
+.it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-bottom:1px solid var(--rule);align-items:baseline}
+.it.sel{background:var(--accent-soft);margin-inline:-8px;padding-inline:8px;border-radius:6px}
+.it .nm{font-size:.88rem;font-weight:600;overflow-wrap:anywhere}
+.it .sb{font-size:.74rem;color:var(--muted);grid-column:1}
+.it .am{font-family:var(--mono);font-size:.88rem;font-variant-numeric:tabular-nums;grid-row:1;grid-column:2}
+.it .acts{grid-column:1/-1;display:flex;gap:6px;margin-top:4px}
+.it .acts button{border:0;background:transparent;color:var(--accent);font-size:.78rem;padding:2px 4px;cursor:pointer;min-height:24px}
+.it .acts button:hover{text-decoration:underline}
+.emptyest{margin-top:14px;padding:16px;border:1px dashed var(--rule);border-radius:10px;color:var(--muted);font-size:.86rem}
+.adjrow{display:flex;justify-content:space-between;font-size:.82rem;padding:6px 0;border-bottom:1px solid var(--rule)}
+.adjrow span:last-child{font-family:var(--mono)}
+.exports{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.exports .full{grid-column:1/-1}
+.fine{font-size:.74rem;color:var(--muted);margin:12px 0 0;line-height:1.45}
+details.panel{background:var(--surface);border:1px solid var(--rule);border-radius:14px}
+details.panel summary{cursor:pointer;padding:13px 18px;font-weight:600;font-size:.9rem}
+.panel-body{padding:0 18px 16px;font-size:.83rem}
+.panel-body p{margin:0 0 10px;color:var(--muted)}
+.adj{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.adj .field input,.adj .field select{min-height:34px;padding:6px 8px;font-size:.88rem}
+.chart{margin-top:12px;overflow-x:auto}
+.chart svg{display:block;width:100%;height:auto}
+.fy{width:100%;border-collapse:collapse;font-size:.8rem;margin-top:10px}
+.fy th,.fy td{padding:5px 0;border-top:1px solid var(--rule);text-align:left}
+.fy td:last-child,.fy th:last-child{text-align:right;font-family:var(--mono)}
+.fy th{color:var(--muted);font-weight:500}
+.row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+textarea{width:100%;min-height:80px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);font-family:var(--mono);font-size:.75rem;padding:8px;color:var(--ink)}
+
+footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--muted);font-size:.76rem}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.mbar{display:none}
+@media (max-width:1180px){
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:var(--surface);border-top:1px solid var(--rule);justify-content:space-between;align-items:center;z-index:10;gap:12px}
+  .mbar b{font-family:var(--mono);font-size:1.15rem;font-weight:500}
+  .mbar a{color:var(--accent);font-size:.85rem}
+  body{padding-bottom:70px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div class="brand"><span class="mark" aria-hidden="true">730</span><div><h1>SevenThirty</h1><p>Azure estimates in GBP that show their working</p></div></div>
+    <div class="hours" role="group" aria-labelledby="hoursLbl">
+      <span class="lbl" id="hoursLbl">Hours per month</span>
+      <div class="seg" id="seg">
+        <button type="button" data-mode="730" aria-pressed="true"><span class="n">730</span><span class="t">always on</span></button>
+        <button type="button" data-mode="217" aria-pressed="false"><span class="n">217</span><span class="t">office hours</span></button>
+        <button type="button" data-mode="custom" aria-pressed="false"><input id="customHours" type="number" min="0" max="744" step="1" value="196" aria-label="Custom hours per month"><span class="t">custom</span></button>
+      </div>
+    </div>
+    <div class="status">
+      <span class="chip"><span class="dot" aria-hidden="true"></span>Prices <b id="snapDate">snapshot</b></span>
+      <span class="chip">GBP retail, excl. VAT</span>
+      <button class="btn sm ghost" type="button" id="themeBtn">Switch theme</button>
+    </div>
+  </header>
+
+  <div class="app">
+    <nav class="menu" id="menu" aria-label="Azure services"></nav>
+    <main id="cfg" class="cfg" aria-live="off"></main>
+    <div class="sheetcol" id="sheetcol">
+      <section class="sheet" id="sheet" aria-labelledby="estTitle">
+        <h2 id="estTitle">Your estimate</h2>
+        <div class="meta">
+          <label class="sr" for="dClient">Client</label><input id="dClient" type="text" placeholder="Client" autocomplete="off">
+          <label class="sr" for="dTitle">Estimate title</label><input id="dTitle" type="text" placeholder="Estimate title" autocomplete="off">
+          <label class="sr" for="dBy">Prepared by</label><input id="dBy" type="text" placeholder="Prepared by" autocomplete="off">
+          <label class="sr" for="dStatus">Status</label><select id="dStatus"><option>Indicative</option><option>Design stage</option><option>Final</option></select>
+        </div>
+        <div class="big" id="total">£0.00</div>
+        <div class="sr" aria-live="polite" id="liveTotal"></div>
+        <div class="kpis">
+          <div class="kpi"><span>Annual</span><b id="kAnnual">£0</b></div>
+          <div class="kpi"><span id="kTermLbl">36-month ACR</span><b id="kTerm">£0</b></div>
+        </div>
+        <div class="split" aria-hidden="true"><div class="s" id="barS"></div><div class="u" id="barU"></div></div>
+        <div class="legend">
+          <span><span class="sw" style="background:var(--standing)"></span>Standing <b id="tS">£0.00</b></span>
+          <span><span class="sw" style="background:var(--usage)"></span>Usage <b id="tU">£0.00</b></span>
+        </div>
+        <div id="groups" class="groups"></div>
+        <div id="adjust"></div>
+        <div class="exports">
+          <button class="btn primary full" type="button" id="copyMd">Copy as Markdown</button>
+          <button class="btn" type="button" id="copyCsv">Copy CSV</button>
+          <button class="btn" type="button" id="copyJson">Copy estimate file</button>
+          <button class="btn" type="button" id="dlCsv" hidden>Download CSV</button>
+          <button class="btn" type="button" id="dlMd" hidden>Download Markdown</button>
+        </div>
+        <p class="fine">List prices exclude VAT and any EA, MCA or CSP discount unless entered under ACR forecast. Standing charges bill while a resource exists; usage charges scale with traffic.</p>
+      </section>
+
+      <details class="panel">
+        <summary>ACR forecast and adjustments</summary>
+        <div class="panel-body">
+          <div class="adj">
+            <label class="field" for="aStart">First month<input id="aStart" type="month"></label>
+            <label class="field" for="aTerm">Term<select id="aTerm"><option value="12">12 months</option><option value="24">24 months</option><option value="36" selected>36 months</option><option value="60">60 months</option></select></label>
+            <label class="field" for="aLive">Go-live month <span class="u">(1 = first)</span><input id="aLive" type="number" min="1" max="60" step="1" value="1"></label>
+            <label class="field" for="aRamp">Ramp to full <span class="u">(months)</span><input id="aRamp" type="number" min="1" max="36" step="1" value="1"></label>
+            <label class="field" for="aDisc">Discount <span class="u">(% off list)</span><input id="aDisc" type="number" min="0" max="100" step="0.5" value="0"></label>
+            <label class="field" for="aCont">Contingency <span class="u">(%)</span><input id="aCont" type="number" min="0" max="100" step="1" value="0"></label>
+          </div>
+          <div class="chart" id="chart" role="img" aria-label="Monthly consumption over the term"></div>
+          <table class="fy" id="fyTable"></table>
+        </div>
+      </details>
+
+      <details class="panel" id="pricePanel">
+        <summary>Price data and estimate files</summary>
+        <div class="panel-body">
+          <p id="priceIntro">Load a file from the SevenThirty pricing script. A rates file refreshes every guided calculator; a catalogue file also unlocks search across every Azure service. You can also reopen an estimate file copied from this page.</p>
+          <p class="catstat" id="catStat">No catalogue loaded.</p>
+          <div class="row">
+            <label class="btn sm primary" for="importFile" style="display:inline-flex;align-items:center">Choose file…</label>
+            <input id="importFile" type="file" accept=".json,.gz,application/json,application/gzip" class="sr">
+            <button class="btn sm" type="button" id="newEst">Start new estimate</button>
+          </div>
+          <label class="sr" for="importBox">Paste a rates file or estimate file</label>
+          <textarea id="importBox" placeholder="Or paste a rates file or estimate file here" style="margin-top:10px"></textarea>
+          <div class="row"><button class="btn sm" type="button" id="importBtn">Load pasted text</button></div>
+        </div>
+      </details>
+    </div>
+  </div>
+
+  <footer>SevenThirty is an independent tool and is not affiliated with or endorsed by Microsoft. Figures are indicative estimates from Microsoft's published retail prices in GBP; actual charges depend on configuration, usage, agreement type and discounts. Prices exclude VAT.</footer>
+</div>
+
+<div class="mbar"><span>Estimate <b id="mTotal">£0.00</b></span><a href="#sheet">View estimate</a></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script src="app.js" defer></script>
+</body>
+</html>

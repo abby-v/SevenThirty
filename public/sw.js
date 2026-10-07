@@ -14,6 +14,7 @@ self.addEventListener('fetch', (event) => {
   const req = event.request
   const url = new URL(req.url)
   if (req.method !== 'GET' || url.origin !== self.location.origin) return
+  if (url.pathname.includes('/lite/')) return // SevenThirty Lite manages its own freshness
 
   const networkFirst = url.pathname.includes('/prices/') || req.mode === 'navigate'
   if (networkFirst) {

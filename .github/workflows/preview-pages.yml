@@ -8,6 +8,10 @@ on:
   push:
     branches: [main, 'claude/**']
   workflow_dispatch:
+  # Republish after a successful price refresh (commits made by a workflow don't trigger push).
+  workflow_run:
+    workflows: [Pricing job, Lite prices]
+    types: [completed]
 
 permissions:
   contents: read
@@ -20,6 +24,7 @@ concurrency:
 
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -29,6 +34,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Add SevenThirty Lite at /lite
+        run: cp -r lite/site dist/lite
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
