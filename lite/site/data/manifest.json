@@ -1,14 +1,18 @@
 {
  "schema": "seventhirty-manifest-1",
- "seed": true,
  "generated": "2026-10-07",
- "generatedAt": "2026-10-07T12:00:00Z",
+ "generatedAt": "2026-10-07T13:52:37Z",
  "regions": [
+  "uksouth",
+  "ukwest",
+  "northeurope",
+  "westeurope"
+ ],
+ "catalogueRegions": [
   "uksouth",
   "ukwest"
  ],
- "catalogueRegions": [],
  "prices": "prices.json",
- "catalogue": null,
- "source": "Seed snapshot collected from the Azure Retail Prices API; replaced by the first daily run"
+ "catalogue": "catalogue.json",
+ "source": "Azure Retail Prices API (prices.azure.com), GBP retail list prices"
 }
