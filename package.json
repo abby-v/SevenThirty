@@ -1,38 +1,14 @@
 {
   "name": "seventhirty",
   "private": true,
-  "version": "0.1.0",
+  "description": "SevenThirty: Azure cost estimates in native GBP that show their working",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "oxlint src scripts e2e",
-    "test": "vitest run",
-    "test:e2e": "playwright test",
-    "prices": "node scripts/fetch-prices.ts",
-    "prices:explore": "node scripts/fetch-prices.ts --explore",
-    "prices:sample": "node scripts/make-sample.ts"
+    "test": "node --test \"tests/*.test.js\"",
+    "test:pipeline": "python3 -m unittest discover -s pipeline -p \"test_*.py\" -v",
+    "serve": "python3 -m http.server --directory site 8080"
   },
-  "dependencies": {
-    "exceljs": "^4.4.0",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
-  },
-  "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.63.0",
-    "@types/node": "^24.13.3",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
-    "@vitejs/plugin-react": "^6.1.1",
-    "oxlint": "^1.81.0",
-    "typescript": "~6.0.2",
-    "vite": "^8.3.0",
-    "vitest": "^5.0.3"
-  },
-  "description": "SevenThirty: transparent Azure cost estimates in native GBP for UK consultants",
   "engines": {
-    "node": ">=22.18"
+    "node": ">=20"
   }
 }

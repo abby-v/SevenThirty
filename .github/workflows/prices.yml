@@ -1,17 +1,22 @@
-name: Pricing job
+name: Daily prices
 
-# Pulls native GBP list prices from the Azure Retail Prices API every morning,
-# validates them against the previous snapshot and commits the new snapshot.
-# If validation fails nothing is committed and the site keeps the last good
-# snapshot; the failed run is the alert.
+# Refreshes SevenThirty's prices from the Azure Retail Prices API (GBP) every day.
+# Scheduled for 06:00 UTC (06:00 GMT; 07:00 UK time during BST). GitHub treats schedules
+# as best effort, so a run can start late when its runners are busy.
+#
+# Nothing is published unless the new prices pass two checks:
+#   1. the pipeline's own validation (enough meters, nothing vanished, no move above 25%)
+#   2. the site's tests, which price every calculator and option against the new data
+# If either fails, the site keeps yesterday's prices and the failed run is the alert.
+# On success the new data is committed and "Publish site" redeploys GitHub Pages.
 
 on:
   schedule:
-    - cron: '17 5 * * *' # 05:17 UTC daily
+    - cron: '0 6 * * *'
   workflow_dispatch:
     inputs:
-      accept_changes:
-        description: 'Accept price moves above the 20% threshold (after checking them)'
+      force:
+        description: 'Publish even if prices moved more than 25% (after checking the run log)'
         type: boolean
         default: false
 
@@ -19,31 +24,47 @@ permissions:
   contents: write
 
 concurrency:
-  group: pricing
+  group: prices
   cancel-in-progress: false
 
 jobs:
   prices:
     runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      PRICE_REGIONS: ${{ vars.PRICE_REGIONS || vars.LITE_PRICE_REGIONS || 'uksouth ukwest northeurope westeurope' }}
+      CATALOGUE_REGIONS: ${{ vars.CATALOGUE_REGIONS || vars.LITE_CATALOGUE_REGIONS || 'uksouth ukwest' }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Fetch, normalise and validate GBP prices
-        run: npm run prices -- ${{ inputs.accept_changes && '--accept-changes' || '' }}
-      - name: Unit and golden tests against the new snapshot
-        run: npm test
-      - name: Commit snapshot
+
+      - name: Fetch latest GBP prices from Microsoft
         run: |
-          if git diff --quiet -- public/prices && [ -z "$(git ls-files --others --exclude-standard public/prices)" ]; then
+          python pipeline/fetch_prices.py \
+            --site-data site/data \
+            --catalog-regions "$CATALOGUE_REGIONS" \
+            ${{ inputs.force && '--force' || '' }} \
+            $PRICE_REGIONS
+
+      - name: Price every calculator against the new data
+        run: npm test
+
+      - name: Commit price data
+        run: |
+          git config user.name "seventhirty-pricing"
+          git config user.email "seventhirty-pricing@users.noreply.github.com"
+          git add site/data
+          if git diff --cached --quiet; then
             echo "No price changes."
             exit 0
           fi
-          git config user.name "seventhirty-pricing"
-          git config user.email "seventhirty-pricing@users.noreply.github.com"
-          git add public/prices
-          git commit -m "Price snapshot $(date -u +%Y-%m-%d)"
-          git push
+          git commit -m "Prices $(date -u +%Y-%m-%d)"
+          git pull --rebase --autostash origin "${GITHUB_REF_NAME}"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

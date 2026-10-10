@@ -1,29 +1,30 @@
-name: CI
+name: Tests
 
 on:
-  pull_request:
   push:
-    branches: [main]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  test:
+  site:
+    name: Pricing maths and every calculator
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm run lint
-      - run: npx tsc -b
-      - name: Unit and golden tests
-        run: npm test
-      - run: npm run build
-      - name: Install Chromium for accessibility tests
-        run: npx playwright install --with-deps chromium
-      - name: End-to-end and axe accessibility tests
-        run: npm run test:e2e
+      - run: npm test
+
+  pipeline:
+    name: Price pipeline
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s pipeline -p "test_*.py" -v
