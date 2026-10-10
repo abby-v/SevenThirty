@@ -34,11 +34,33 @@ function exampleState(){
 }
 let isExample=false;
 if(!S||S.v!==2){S=exampleState();isExample=true;}
+if(!S.id)S.id=uid();
 if(!S.ui)S.ui={view:"vm",region:"uksouth"};
 function newDraft(svc,region){return {svc,region:region||S.ui.region||"uksouth",label:"",cfg:defaults(svc)};}
 if(!S.ui.draft||!SVCMAP[S.ui.draft.svc]){const v=SVCMAP[S.ui.view]?S.ui.view:"vm";S.ui.view=v;S.ui.draft=newDraft(v);S.ui.editing=null;}
 function save(){store.set("st-estimate-v2",S);}
-function touched(){isExample=false;save();}
+function touched(){isExample=false;save();queuePersist();}
+
+/* ---- Your estimates: every estimate is kept in this browser and saved as you work ---- */
+const SAVED_KEY="st-saved-v1";
+const loadSaved=()=>{const l=store.get(SAVED_KEY);return Array.isArray(l)?l:[];};
+const estName=st=>(st.meta&&(st.meta.title||st.meta.client))||"Untitled estimate";
+const bare=st=>{const o=JSON.parse(JSON.stringify(st));delete o.ui;return o;};
+let persistTimer=null,pendingDel=null;
+function persistNow(){clearTimeout(persistTimer);persistTimer=null;if(isExample)return;
+  const list=loadSaved();const rec={id:S.id,name:estName(S),client:(S.meta&&S.meta.client)||"",updated:new Date().toISOString(),monthly:R?R.monthly:0,items:S.items.length,data:bare(S)};
+  const i=list.findIndex(x=>x.id===S.id);if(i>=0)list[i]=rec;else list.unshift(rec);store.set(SAVED_KEY,list);renderSaved();}
+function queuePersist(){clearTimeout(persistTimer);persistTimer=setTimeout(persistNow,500);}
+function renderSaved(){const ul=$("savedList");if(!ul)return;const list=loadSaved().sort((a,b)=>String(b.updated).localeCompare(String(a.updated)));
+  $("savedCount").textContent=list.length?`(${list.length})`:"";
+  if(!list.length){ul.innerHTML=`<li class="none">${isExample?"You're looking at the example estimate. Change anything, or choose New estimate, and it will be saved here.":"Nothing saved yet."}</li>`;return;}
+  ul.innerHTML=list.map(e=>{const cur=e.id===S.id&&!isExample;
+    return `<li class="${cur?"cur":""}" data-sid="${esc(e.id)}"><span class="nm">${esc(e.name)}</span><span class="am">${gbp(e.monthly||0,0)}/mo</span>
+      <span class="sb">${e.client&&e.client!==e.name?esc(e.client)+" · ":""}${n(e.items||0)} item${e.items===1?"":"s"} · edited ${esc(fmtStamp(e.updated))}</span>
+      <span class="acts">${cur?'<span class="here">Open now</span>':`<button type="button" data-sact="open" aria-label="Open ${esc(e.name)}">Open</button>`}<button type="button" data-sact="dup" aria-label="Duplicate ${esc(e.name)}">Duplicate</button><button type="button" data-sact="del" aria-label="Delete ${esc(e.name)}">${pendingDel===e.id?"Confirm delete":"Delete"}</button></span></li>`;}).join("");}
+function openEstimate(data){persistNow();S=Object.assign(exampleState(),JSON.parse(JSON.stringify(data)));if(!S.id)S.id=uid();
+  S.ui={view:"vm",region:"uksouth",draft:null,editing:null};S.ui.draft=newDraft("vm");isExample=false;save();full();renderSaved();}
+function startNew(){persistNow();const ov=S.overrides;S=exampleState();S.items=[];S.overrides=ov||{};S.id=uid();S.ui.draft=newDraft(S.ui.view);isExample=false;save();full();persistNow();}
 /* =====================================================================
    RENDER: MENU
    ===================================================================== */
@@ -253,9 +275,14 @@ $("customHours").addEventListener("input",e=>{S.custom=e.target.value;S.mode="cu
 [["dClient","client"],["dTitle","title"],["dBy","by"],["dStatus","status"]].forEach(([i,k])=>$(i).addEventListener("input",e=>{S.meta[k]=e.target.value;touched();}));
 [["aStart","start"],["aTerm","term"],["aLive","live"],["aRamp","ramp"],["aDisc","disc"],["aCont","cont"]].forEach(([i,k])=>{const h=e=>{S.acr[k]=e.target.value;touched();refresh();};$(i).addEventListener("input",h);$(i).addEventListener("change",h);});
 $("themeBtn").addEventListener("click",()=>{const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",cur==="dark"?"light":"dark");});
-let pendingNew=false;
-$("newEst").addEventListener("click",e=>{if(!pendingNew){pendingNew=true;e.target.textContent="Confirm: clear this estimate";e.target.classList.add("primary");setTimeout(()=>{pendingNew=false;e.target.textContent="Start new estimate";e.target.classList.remove("primary");},4000);return;}
-  pendingNew=false;e.target.textContent="Start new estimate";e.target.classList.remove("primary");const ov=S.overrides;S=exampleState();S.items=[];S.overrides=ov;isExample=false;save();full();toast("New estimate started");});
+$("newEst").addEventListener("click",()=>{startNew();toast("New estimate started. The previous one is under Your estimates.");});
+$("savedList").addEventListener("click",e=>{const b=e.target.closest("button[data-sact]");if(!b)return;const id=b.closest("[data-sid]").dataset.sid;const list=loadSaved();const rec=list.find(x=>x.id===id);if(!rec)return;
+  if(b.dataset.sact==="open"){openEstimate(rec.data);toast(`Opened ${rec.name}`);return;}
+  if(b.dataset.sact==="dup"){persistNow();const fresh=loadSaved();const c=JSON.parse(JSON.stringify(fresh.find(x=>x.id===id)||rec));c.id=uid();c.data.id=c.id;c.name=`${rec.name} (copy)`;c.data.meta=Object.assign({},c.data.meta,{title:c.name});c.updated=new Date().toISOString();fresh.unshift(c);store.set(SAVED_KEY,fresh);renderSaved();toast(`Duplicated as ${c.name}`);return;}
+  if(b.dataset.sact==="del"){if(pendingDel!==id){pendingDel=id;renderSaved();setTimeout(()=>{if(pendingDel===id){pendingDel=null;renderSaved();}},4000);return;}
+    pendingDel=null;store.set(SAVED_KEY,loadSaved().filter(x=>x.id!==id));if(id===S.id)startNew();renderSaved();toast(`Deleted ${rec.name}`);}});
+window.addEventListener("storage",e=>{if(e.key===SAVED_KEY)renderSaved();});
+$("packBtn").addEventListener("click",()=>{persistNow();store.set("st-pack",{S:bare(S),snap:SNAP});});
 
 /* =====================================================================
    PRICE DATA
@@ -272,7 +299,7 @@ function applyPrices(obj,quiet,live){
 }
 function importText(txt){let obj;try{obj=JSON.parse(txt);}catch(e){toast("That isn't valid JSON. Check it was copied in full.");return;}
   if(obj&&obj.regions&&obj.currency){applyPrices(obj);return;}
-  if(obj&&obj.v===2&&Array.isArray(obj.items)){S=Object.assign(exampleState(),obj);S.ui=S.ui||{view:"vm",region:"uksouth"};if(!S.ui.draft)S.ui.draft=newDraft("vm");S.ui.editing=null;save();full();toast("Estimate loaded");return;}
+  if(obj&&obj.v===2&&Array.isArray(obj.items)){obj.id=uid();openEstimate(obj);persistNow();toast(`Opened ${estName(S)}. It's now in Your estimates.`);return;}
   toast("Not recognised. Load a SevenThirty rates or catalogue file, or an estimate file.");}
 async function readFile(f){if(/\.gz$/i.test(f.name)){if(typeof DecompressionStream==="undefined")throw new Error("gzip");return await new Response(f.stream().pipeThrough(new DecompressionStream("gzip"))).text();}return await f.text();}
 $("importBtn").addEventListener("click",()=>importText($("importBox").value.trim()));
@@ -285,7 +312,7 @@ $("importFile").addEventListener("change",async e=>{const f=e.target.files[0];e.
 async function copy(text,msg){try{await navigator.clipboard.writeText(text);toast(msg);}catch(e){$("importBox").value=text;$("pricePanel").open=true;$("importBox").focus();$("importBox").select();toast("Clipboard blocked here. The text is selected in the box under Price data; copy it from there.");}}
 $("copyMd").addEventListener("click",()=>copy(toMarkdown(S,R,SNAP),"Markdown copied"));
 $("copyCsv").addEventListener("click",()=>copy(toCsv(S,R),"CSV copied"));
-$("copyJson").addEventListener("click",()=>{const o=Object.assign({},S,{ui:undefined});copy(JSON.stringify(o),"Estimate file copied. Paste it under Price data to reopen it.");});
+$("copyJson").addEventListener("click",()=>{const o=Object.assign({},S,{ui:undefined});copy(JSON.stringify(o),"Estimate file copied. Paste it under Price data on any computer to open it.");});
 const fname=ext=>`${(S.meta.client||"azure")+"-"+(S.meta.title||"estimate")}`.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"")+`.${ext}`;
 function blobSave(name,data,type){try{const url=URL.createObjectURL(new Blob([data],{type}));const a=document.createElement("a");a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);toast(`Downloaded ${name}`);}catch(e){toast("The download didn't start. Use the copy buttons instead.");}}
 (async()=>{try{const dl=window.claude&&window.claude.use?await window.claude.use("downloads"):null;$("dlCsv").hidden=false;$("dlMd").hidden=false;
@@ -296,7 +323,7 @@ function blobSave(name,data,type){try{const url=URL.createObjectURL(new Blob([da
 let tt;function toast(m){const t=$("toast");t.textContent=m;t.classList.add("show");clearTimeout(tt);tt=setTimeout(()=>t.classList.remove("show"),2800);}
 
 full();
-if(isExample)toast("Example estimate loaded. Edit any item, or start a new estimate under Price data.");
+if(isExample){renderSaved();toast("Example estimate loaded. Edit anything, or choose New estimate under Your estimates.");}else persistNow();
 (async()=>{
   // Live prices published next to the page by the daily pipeline (data/manifest.json → data/prices.json)
   try{const r=await fetch(`data/manifest.json?t=${Date.now()}`,{cache:"no-store"});if(r.ok){const m=await r.json();if(m&&m.prices)MAN=m;}}catch(e){}

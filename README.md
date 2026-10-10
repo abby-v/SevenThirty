@@ -16,6 +16,8 @@ Azure cost estimates in native GBP for MSP consultants, with the working shown o
 - **One hours model.** 730 h (always on), 217 h (office hours) or custom, with per-line overrides and warnings for resources that can't be paused.
 - **Native GBP.** Prices come from the Retail Prices API with `currencyCode='GBP'`; nothing is converted from USD.
 - **ACR forecast.** Go-live month, ramp, discount and contingency, with a monthly chart and Microsoft fiscal-year (July–June) totals.
+- **Client pack.** A print-ready document (save as PDF from the print dialog): cover, executive summary, cost breakdown by section and region, commitment options for every eligible item with the possible saving, consumption forecast by contract and fiscal year, assumptions, exclusions, a planning range and the line-by-line working.
+- **Your estimates.** Every estimate saves automatically in your browser; open, duplicate or delete them from the estimate sheet. Copy the estimate file to move one to another computer.
 - **Exports.** Markdown and CSV for proposals and finance.
 
 ## How the daily refresh works
@@ -41,6 +43,7 @@ GitHub runs scheduled workflows on a best-effort basis; on this repository they 
 | `site/js/services.js` | Every guided calculator: inputs, presets, notes and formula |
 | `site/js/engine.js` | Prices items and whole estimates (pure functions, no DOM) |
 | `site/js/exports.js` | Markdown, CSV and assumptions |
+| `site/js/pack-data.js`, `site/pack.html`, `site/js/pack.js` | The client pack: its figures (tested) and the printable page |
 | `site/js/ui.js` | The page: menu, configurator, estimate sheet, price data loading |
 | `site/data/` | Price data written by the daily job |
 | `pipeline/` | The price fetcher and its tests (Python, standard library only) |

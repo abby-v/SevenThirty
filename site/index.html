@@ -213,6 +213,19 @@ details.panel summary{cursor:pointer;padding:13px 18px;font-weight:600;font-size
 .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 textarea{width:100%;min-height:80px;border:1px solid var(--rule);border-radius:6px;background:var(--bg);font-family:var(--mono);font-size:.75rem;padding:8px;color:var(--ink)}
 
+.exports a.btn{text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
+details.panel summary .cnt{font-family:var(--mono);font-size:.75rem;color:var(--muted);font-weight:500;margin-left:6px}
+.saved{list-style:none;margin:0;padding:0;max-height:340px;overflow:auto}
+.saved li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:8px 0;border-top:1px solid var(--rule)}
+.saved li.cur{background:var(--accent-soft);margin-inline:-8px;padding-inline:8px;border-radius:6px;border-top-color:transparent}
+.saved .nm{font-weight:600;font-size:.88rem;overflow-wrap:anywhere}
+.saved .sb{grid-column:1;font-size:.74rem;color:var(--muted)}
+.saved .am{grid-row:1;grid-column:2;font-family:var(--mono);font-size:.85rem;font-variant-numeric:tabular-nums}
+.saved .acts{grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap}
+.saved .acts button{border:0;background:transparent;color:var(--accent);font-size:.78rem;padding:2px 4px;cursor:pointer;min-height:24px}
+.saved .acts button:hover{text-decoration:underline}
+.saved .acts .here{font-size:.78rem;color:var(--muted);padding:2px 4px}
+.saved .none{color:var(--muted);font-size:.84rem;padding:8px 0}
 footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--muted);font-size:.76rem}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:20;max-width:calc(100% - 32px)}
 .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -271,7 +284,8 @@ footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--mute
         <div id="groups" class="groups"></div>
         <div id="adjust"></div>
         <div class="exports">
-          <button class="btn primary full" type="button" id="copyMd">Copy as Markdown</button>
+          <a class="btn primary full" id="packBtn" href="pack.html" target="_blank" rel="noopener">Open client pack (print or PDF)</a>
+          <button class="btn full" type="button" id="copyMd">Copy as Markdown</button>
           <button class="btn" type="button" id="copyCsv">Copy CSV</button>
           <button class="btn" type="button" id="copyJson">Copy estimate file</button>
           <button class="btn" type="button" id="dlCsv" hidden>Download CSV</button>
@@ -279,6 +293,15 @@ footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--mute
         </div>
         <p class="fine">List prices exclude VAT and any EA, MCA or CSP discount unless entered under ACR forecast. Standing charges bill while a resource exists; usage charges scale with traffic.</p>
       </section>
+
+      <details class="panel" id="savedPanel" open>
+        <summary>Your estimates <span class="cnt" id="savedCount"></span></summary>
+        <div class="panel-body">
+          <p>Every estimate saves automatically in this browser. Copy the estimate file to move one to another computer or colleague.</p>
+          <div class="row" style="margin:0 0 8px"><button class="btn sm primary" type="button" id="newEst">New estimate</button></div>
+          <ul class="saved" id="savedList"></ul>
+        </div>
+      </details>
 
       <details class="panel">
         <summary>ACR forecast and adjustments</summary>
@@ -299,12 +322,11 @@ footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--mute
       <details class="panel" id="pricePanel">
         <summary>Price data and estimate files</summary>
         <div class="panel-body">
-          <p id="priceIntro">Load a file from the SevenThirty pricing script. A rates file refreshes every guided calculator; a catalogue file also unlocks search across every Azure service. You can also reopen an estimate file copied from this page.</p>
+          <p id="priceIntro">Load a file from the SevenThirty pricing script. A rates file refreshes every guided calculator; a catalogue file also unlocks search across every Azure service. You can also open an estimate file copied from this page; it is added to Your estimates.</p>
           <p class="catstat" id="catStat">No catalogue loaded.</p>
           <div class="row">
             <label class="btn sm primary" for="importFile" style="display:inline-flex;align-items:center">Choose file…</label>
             <input id="importFile" type="file" accept=".json,.gz,application/json,application/gzip" class="sr">
-            <button class="btn sm" type="button" id="newEst">Start new estimate</button>
           </div>
           <label class="sr" for="importBox">Paste a rates file or estimate file</label>
           <textarea id="importBox" placeholder="Or paste a rates file or estimate file here" style="margin-top:10px"></textarea>
