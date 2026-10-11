@@ -1,6 +1,6 @@
 import { BUILTIN } from './prices.js';
 import { REGIONS, regionName, zoneOf } from './regions.js';
-import { gbp, n, money, scalar, esc, fmtDate, fmtStamp } from './format.js';
+import { sizeAlias, gbp, n, money, scalar, esc, fmtDate, fmtStamp } from './format.js';
 import { rateLookup, globalHours } from './blocks.js';
 import { SECTIONS, SVCMAP, SECTION_ORDER, FAMILY_SEC, defaults } from './services.js';
 import { computeItem, computeGeneric, qtyLabel, itemSection, itemName, itemSum, computeAll, monthLabel, fiscalYears } from './engine.js';
@@ -130,7 +130,7 @@ let catSec="",catQ="",catIndex=null,catIndexFor=null,MAN=null,catLoading=null;
 function loadServerCatalogue(){if(catLoading||!MAN||!MAN.catalogue)return catLoading;catLoading=(async()=>{try{const r=await fetch(`data/${MAN.catalogue}?v=${encodeURIComponent(MAN.generatedAt||MAN.generated)}`);if(!r.ok)throw new Error(r.status);const obj=await r.json();if(obj&&obj.catalog){CAT={generated:obj.generated,strings:obj.catalog.strings,scopes:obj.catalog.scopes};catIndex=null;IDB.set("catalog",CAT);}}catch(e){toast("The price catalogue couldn't be loaded. Try again shortly.");}finally{catLoading=null;syncTop();if(S.ui.view==="catalog")renderCatalog();}})();return catLoading;}
 function catScopes(id){return [id,zoneOf(id),"global",""].filter((x,i,a)=>x!=null&&a.indexOf(x)===i&&CAT.scopes[x]);}
 function buildIndex(id){if(catIndexFor===id&&catIndex)return catIndex;const T=CAT.strings;const idx=[];
-  catScopes(id).forEach(sc=>CAT.scopes[sc].forEach(row=>idx.push({sc,row,svc:T[row[0]],fam:T[row[11]]||"",t:(T[row[0]]+" "+T[row[1]]+" "+T[row[2]]+" "+T[row[3]]).toLowerCase()})));catIndex=idx;catIndexFor=id;return idx;}
+  catScopes(id).forEach(sc=>CAT.scopes[sc].forEach(row=>idx.push({sc,row,svc:T[row[0]],fam:T[row[11]]||"",t:(T[row[0]]+" "+T[row[1]]+" "+T[row[2]]+" "+T[row[3]]).toLowerCase()+" "+sizeAlias(T[row[1]],T[row[2]])})));catIndex=idx;catIndexFor=id;return idx;}
 function renderCatalog(){
   if((!CAT||(MAN&&MAN.catalogue&&CAT.generated!==MAN.generated))&&MAN&&MAN.catalogue){if(!catLoading)loadServerCatalogue();if(!CAT){$("cfg").innerHTML=`<div class="crumb">Price catalogue</div><h2>Loading every Azure meter…</h2><p class="lead">This happens once a day; after that, search is instant.</p>`;return;}}
   const region=S.ui.region||"uksouth";const secName=catSec?SECTIONS.find(s=>s[0]===catSec)[1]:"All Azure services";

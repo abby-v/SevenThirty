@@ -68,3 +68,15 @@ for (const region of regions) {
     assert.deepEqual(problems, [], `\n${problems.slice(0, 40).join('\n')}`);
   });
 }
+
+test('the catalogue search example "PostgreSQL D4ds" finds PostgreSQL compute', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const { sizeAlias } = await import('../site/js/format.js');
+  const { catalog: c } = JSON.parse(await readFile(new URL('../site/data/catalogue.json', import.meta.url)));
+  const T = c.strings;
+  const hits = c.scopes.uksouth.filter((r) => {
+    const t = `${T[r[0]]} ${T[r[1]]} ${T[r[2]]} ${T[r[3]]} ${sizeAlias(T[r[1]], T[r[2]])}`.toLowerCase();
+    return ['postgresql', 'd4ds', 'v5'].every((w) => t.includes(w));
+  });
+  assert.ok(hits.some((r) => /PostgreSQL Flexible Server General Purpose Ddsv5/.test(T[r[1]]) && T[r[2]] === '4 vCore'));
+});

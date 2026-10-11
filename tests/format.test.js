@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { bands, tierLabel, scalar, money, gbp, vmName } from '../site/js/format.js';
+import { sizeAlias, bands, tierLabel, scalar, money, gbp, vmName } from '../site/js/format.js';
 
 test('bands splits usage across price tiers', () => {
   const tiers = [[0, 0], [100, 0.06], [10100, 0.05]];
@@ -37,4 +37,10 @@ test('money keeps enough decimals for small hourly rates', () => {
 
 test('VM names drop the Standard_ prefix', () => {
   assert.equal(vmName('Standard_D4s_v5'), 'D4s v5');
+});
+
+test('database compute meters can be found by the VM size consultants type', () => {
+  assert.equal(sizeAlias('Azure Database for PostgreSQL Flexible Server General Purpose Ddsv5 Series Compute', '4 vCore'), 'd4ds d4dsv5 d4ds_v5');
+  assert.equal(sizeAlias('Azure Database for MySQL Flexible Server Memory Optimized Edsv4 Series Compute', '8 vCore'), 'e8ds e8dsv4 e8ds_v4');
+  assert.equal(sizeAlias('Virtual Machines Dsv5 Series', 'D4s v5'), '');
 });

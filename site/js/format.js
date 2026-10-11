@@ -21,4 +21,7 @@ const CL=(kind,what,q,r)=>L(kind,what,`${n(q)} × ${rt(r)}/h × 730 h`,q*scalar(
 function fmtDate(s){const d=new Date(s);return isNaN(d)?String(s||""):d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});}
 function fmtStamp(s){const d=new Date(s);return isNaN(d)?String(s||""):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit",timeZone:"Europe/London"});}
 
-export { gbp, n, money, scalar, rt, esc, num, vmName, DAYS, bands, tierLabel, L, TL, HL, ML, CL, fmtDate, fmtStamp };
+/** Extra search words for database compute meters, which Microsoft names by series and core count
+ * ("General Purpose Ddsv5 Series Compute", "4 vCore") rather than by the VM size consultants type ("D4ds v5"). */
+const sizeAlias=(product,sku)=>{const c=/^(\d+) vCore$/i.exec(sku||"");const f=/\b([A-Z])([a-z]*)v(\d+) Series\b/.exec(product||"");if(!c||!f)return "";const sz=f[1]+c[1]+f[2];return (sz+" "+sz+"v"+f[3]+" "+sz+"_v"+f[3]).toLowerCase();};
+export { sizeAlias, gbp, n, money, scalar, rt, esc, num, vmName, DAYS, bands, tierLabel, L, TL, HL, ML, CL, fmtDate, fmtStamp };
