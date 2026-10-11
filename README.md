@@ -11,8 +11,8 @@ Azure cost estimates in native GBP for MSP consultants, with the working shown o
 
 ## What it does
 
-- **Pick, configure, add.** A menu of services by section (Networking, Security, Storage and data, Azure Virtual Desktop, Compute, Kubernetes), a configurator with presets and only the inputs that matter, and an estimate sheet you build up item by item, each in its own region.
-- **Every Azure service.** 29 guided calculators, plus search across every meter Microsoft publishes (about 24,700 for UK South, UK West and the global services), with reservation and savings plan prices where they exist.
+- **Pick, configure, add.** A menu of services by section (Networking, Security, Storage and data, Azure Virtual Desktop, Compute, Kubernetes and containers, Apps and integration, Analytics and AI, Monitoring and management), a configurator with presets and only the inputs that matter, and an estimate sheet you build up item by item, each in its own region.
+- **Every Azure service.** 47 guided calculators, plus search across every meter Microsoft publishes (about 24,700 for UK South, UK West and the global services), with reservation and savings plan prices where they exist. Calculators only offer the sizes and models Microsoft prices in the chosen region (for example, Premium v4 App Service and Azure OpenAI aren't offered in UK West).
 - **One hours model.** 730 h (always on), 217 h (office hours) or custom, with per-line overrides and warnings for resources that can't be paused.
 - **Native GBP.** Prices come from the Retail Prices API with `currencyCode='GBP'`; nothing is converted from USD.
 - **ACR forecast.** Go-live month, ramp, discount and contingency, with a monthly chart and Microsoft fiscal-year (July–June) totals.
@@ -40,7 +40,7 @@ GitHub runs scheduled workflows on a best-effort basis; on this repository they 
 | `site/` | The website: plain HTML, CSS and JavaScript modules, no build step. Upload it to any static host. |
 | `site/js/prices.js` | Built-in snapshot used until live data loads |
 | `site/js/blocks.js` | Rate lookup, the hours model, shared VM, disk and SQL pricing |
-| `site/js/services.js` | Every guided calculator: inputs, presets, notes and formula |
+| `site/js/services.js`, `site/js/services-more.js` | Every guided calculator: inputs, presets, notes and formula (apps, containers, more data services, analytics and AI, and monitoring are in `services-more.js`) |
 | `site/js/engine.js` | Prices items and whole estimates (pure functions, no DOM) |
 | `site/js/exports.js` | Markdown, CSV and assumptions |
 | `site/js/pack-data.js`, `site/pack.html`, `site/js/pack.js` | The client pack: its figures (tested) and the printable page |
@@ -62,7 +62,8 @@ npm run serve          # http://localhost:8080
 ```
 
 - **Golden totals** (`tests/fixtures/golden.json`) lock today's results for every calculator and a typical estimate, priced from a frozen copy of real prices. If you change a formula on purpose, regenerate them with `UPDATE_GOLDEN=1 npm test` and check the diff.
-- **Adding a calculator:** define it in `site/js/services.js`, add it to `SECTION_ORDER`, and add any new meters to `meter_rules()` in `pipeline/fetch_prices.py`. The live-data test will tell you if a meter isn't matched.
+- **Adding a calculator:** define it in `site/js/services.js` or `services-more.js`, add it to `SECTION_ORDER`, and add any new meters to `meter_rules()` or `app_rules()` in `pipeline/fetch_prices.py`. The live-data test will tell you if a meter isn't matched.
+- **Azure OpenAI models** are listed in `AOAI_MODELS` in the fetcher and `AOAI` in `services-more.js`. Microsoft retires models often, so a model disappearing doesn't fail the daily price check; add new ones to both lists.
 
 ## The previous app
 

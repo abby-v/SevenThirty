@@ -151,6 +151,10 @@ class NewServices(unittest.TestCase):
                  meter("Service Bus", "Service Bus", "Standard", "Standard Base Unit", 7.547455, unit="1/Month")]
         self.assertEqual(fp.build_rates(items)["sb_std_base"], 7.547455)
 
+    def test_per_second_prices_keep_their_precision(self):
+        items = [meter("Azure Container Apps", "Azure Container Apps", "Standard", "Standard vCPU Active Usage", 0.0000256412, unit="1 Second")]
+        self.assertEqual(fp.build_rates(items)["aca_vcpu_active"], 0.0000256412)
+
     def test_retired_openai_models_do_not_fail_the_price_check(self):
         prev = {"regions": {"uksouth": {"aoai_g4o_in": 1.9, "pip_h": 0.004}}}
         new = {"regions": {"uksouth": {"pip_h": 0.004}}}

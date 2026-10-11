@@ -1,18 +1,16 @@
 import { SPECS, SENT_TIERS } from './prices.js';
 import { n, scalar, rt, money, vmName, DAYS, L, TL, HL, ML, CL } from './format.js';
-import { PRICING, vmSizes, pricingOpts, vmLines, DISK_OPTS, diskLines, sentTierCost, sqlLines } from './blocks.js';
+import { MORE } from './services-more.js';
+import { redOpts, PRICING, vmSizes, pricingOpts, vmLines, DISK_OPTS, diskLines, sentTierCost, sqlLines } from './blocks.js';
 
 // SevenThirty: every guided calculator: its inputs, presets, notes and pricing formula.
-const SECTIONS=[["net","Networking"],["sec","Security"],["data","Storage and data"],["avd","Azure Virtual Desktop"],["compute","Compute"],["k8s","Kubernetes"]];
+const SECTIONS=[["net","Networking"],["sec","Security"],["data","Storage and data"],["avd","Azure Virtual Desktop"],["compute","Compute"],["k8s","Kubernetes and containers"],["apps","Apps and integration"],["ai","Analytics and AI"],["mgmt","Monitoring and management"]];
 const ER_BW=["50 Mbps","100 Mbps","200 Mbps","500 Mbps","1 Gbps","2 Gbps","5 Gbps","10 Gbps"];
 const ER_PLAN={"Standard metered":"std_metered","Premium metered":"prem_metered","Standard unlimited":"std_unl","Premium unlimited":"prem_unl"};
 const F=(k,label,def,extra)=>Object.assign({k,label,def,type:"num"},extra||{});
 const SEL=(k,label,opts,def,extra)=>Object.assign({k,label,opts,def,type:"sel"},extra||{});
 const HRS=(extra)=>Object.assign({k:"hours",type:"hours"},extra||{});
 
-/** Zone-redundant storage only exists in regions with availability zones (UK West has none).
- *  Offer ZRS when the region's price data has ZRS meters, or when no data is loaded for it yet. */
-function redOpts(ctx,opts){const R=(ctx.snap&&ctx.snap.regions||{})[ctx.region];if(!R)return opts;return Object.keys(R).some(k=>k.endsWith("_ZRS"))?opts:opts.filter(o=>o!=="ZRS");}
 const SVC=[
 /* ---------------- Compute ---------------- */
 {id:"vm",sec:"compute",name:"Virtual machines",blurb:"Any VM size, Linux or Windows",
@@ -224,9 +222,12 @@ const SVC=[
  desc:"Data leaving Azure to the internet over the Microsoft network. Tiered: the first 100 GB a month is free.",fields:[F("gb","Outbound data",500,{unit:"GB/mo"})],
  calc:(c,h,r)=>TL("usage","Outbound data",c.gb,r("egress"),"GB"),sum:c=>`${n(c.gb)} GB/mo`}
 ];
+SVC.push(...MORE);
 const SVCMAP=Object.fromEntries(SVC.map(s=>[s.id,s]));
-const SECTION_ORDER={net:["vnet","pip","nat","pe","vpn","er","vwan","lb","agw","afd","tm","dns","egress"],sec:["fw","ddos","bas","defender","sentinel","la","kv"],data:["disk","blob","files","backup","sqldb","sqlmi"],avd:["avd"],compute:["vm"],k8s:["aks"]};
-const FAMILY_SEC={Compute:"compute",Containers:"k8s",Networking:"net",Security:"sec",Storage:"data",Databases:"data",Analytics:"data","Management and Governance":"sec"};
+const SECTION_ORDER={net:["vnet","pip","nat","pe","vpn","er","vwan","lb","agw","afd","tm","dns","egress"],sec:["fw","ddos","bas","defender","sentinel","la","kv"],
+  data:["disk","blob","files","filesstd","anf","backup","asr","sqldb","sqlmi","pg","mysql"],avd:["avd"],compute:["vm"],k8s:["aks","aca","acr"],
+  apps:["app","func","apim","sb","eh"],ai:["adf","fabric","aoai","dbx"],mgmt:["monitor","arc"]};
+const FAMILY_SEC={Compute:"compute",Containers:"k8s",Networking:"net",Security:"sec","Azure Security":"sec",Storage:"data",Databases:"data",Analytics:"ai",Data:"ai","AI + Machine Learning":"ai",Web:"apps",Integration:"apps","Developer Tools":"apps","Management and Governance":"mgmt","Azure Arc":"mgmt"};
 function defaults(svc){const d={};SVCMAP[svc].fields.forEach(f=>{d[f.k]=f.type==="hours"?"":f.def;});return d;}
 
 export { redOpts, SECTIONS, SVC, SVCMAP, SECTION_ORDER, FAMILY_SEC, ER_BW, ER_PLAN, defaults };

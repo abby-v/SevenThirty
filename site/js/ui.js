@@ -68,7 +68,7 @@ function renderMenu(){
   const counts={};S.items.forEach(it=>{const s=itemSection(it);const k=it.svc==="generic"||it.svc==="manual"?"other:"+s:it.svc;counts[k]=(counts[k]||0)+1;counts["sec:"+s]=(counts["sec:"+s]||0)+1;});
   $("menu").innerHTML=SECTIONS.map(([sid,label])=>`<div class="msec"><h2><span style="font-family:inherit;text-transform:inherit;letter-spacing:inherit;color:inherit;font-weight:inherit">${esc(label)}</span>${counts["sec:"+sid]?`<span>${counts["sec:"+sid]} in estimate</span>`:""}</h2><ul>`+
     SECTION_ORDER[sid].map(id=>{const s=SVCMAP[id];return `<li><button type="button" class="mbtn" data-view="${id}" aria-current="${S.ui.view===id}" title="${esc(s.blurb)}"><span>${esc(s.name)}</span>${counts[id]?`<span class="cnt">${counts[id]}</span>`:""}</button></li>`;}).join("")+
-    `<li><button type="button" class="mbtn more" data-view="catalog" data-sec="${sid}" aria-current="${S.ui.view==="catalog"&&catSec===sid}">More ${esc(label.toLowerCase())} services</button></li></ul></div>`).join("")+
+    `<li><button type="button" class="mbtn more" data-view="catalog" data-sec="${sid}" aria-current="${S.ui.view==="catalog"&&catSec===sid}">More ${esc(lowerLabel(label))} services</button></li></ul></div>`).join("")+
     `<div class="msec"><h2>Anything else</h2><ul><li><button type="button" class="mbtn" data-view="catalog" data-sec="" aria-current="${S.ui.view==="catalog"&&!catSec}">Search all Azure services</button></li><li><button type="button" class="mbtn" data-view="manual" aria-current="${S.ui.view==="manual"}">Add a manual line</button></li></ul></div>`;
 }
 
@@ -76,6 +76,7 @@ function renderMenu(){
    RENDER: CONFIGURATOR
    ===================================================================== */
 function optList(f,c,ctx){const o=typeof f.opts==="function"?f.opts(c,ctx):f.opts;return o.map(x=>Array.isArray(x)?x:[x,x]);}
+const lowerLabel=s=>/^Azure /.test(s)?s:s.split(" ").map(w=>/^(Kubernetes|AI)$/.test(w)?w:w.toLowerCase()).join(" ");
 function regionSelect(id,val){return `<label class="field" for="${id}"><span class="fl">Region</span><select id="${id}" data-d="region">${REGIONS.map(([v,t])=>`<option value="${v}"${v===val?" selected":""}>${esc(t)}${(SNAP.regions||{})[v]?"":" (load prices)"}</option>`).join("")}</select></label>`;}
 function fieldHtml(f,c,ctx){const id="f-"+f.k;const lab=`<span class="fl">${esc(f.label||"Hours per month")}${f.unit?` <span class="u">${esc(f.unit)}</span>`:""}</span>`;const hint=f.hint?`<span class="hint">${esc(f.hint)}</span>`:"";
   if(f.type==="sel"){const opts=optList(f,c,ctx);return `<label class="field${f.wide?" wide":""}" for="${id}">${lab}<select id="${id}" data-f="${f.k}">${opts.map(([v,t])=>`<option value="${esc(v)}"${String(v)===String(c[f.k])?" selected":""}>${esc(t)}</option>`).join("")}</select>${hint}</label>`;}
@@ -134,7 +135,7 @@ function buildIndex(id){if(catIndexFor===id&&catIndex)return catIndex;const T=CA
 function renderCatalog(){
   if((!CAT||(MAN&&MAN.catalogue&&CAT.generated!==MAN.generated))&&MAN&&MAN.catalogue){if(!catLoading)loadServerCatalogue();if(!CAT){$("cfg").innerHTML=`<div class="crumb">Price catalogue</div><h2>Loading every Azure meter…</h2><p class="lead">This happens once a day; after that, search is instant.</p>`;return;}}
   const region=S.ui.region||"uksouth";const secName=catSec?SECTIONS.find(s=>s[0]===catSec)[1]:"All Azure services";
-  $("cfg").innerHTML=`<div class="crumb">${esc(catSec?secName:"Anything else")}</div><h2>${catSec?`More ${esc(secName.toLowerCase())} services`:"Search all Azure services"}</h2>
+  $("cfg").innerHTML=`<div class="crumb">${esc(catSec?secName:"Anything else")}</div><h2>${catSec?`More ${esc(lowerLabel(secName))} services`:"Search all Azure services"}</h2>
    <p class="lead">${CAT?`Every meter Microsoft publishes for the region, with reservation and savings plan prices where they exist. Search by product or size, then add it to the estimate.`:
      `To search every Azure service, load a catalogue file once: run <code>python fetch_prices.py --catalog uksouth ukwest</code> and choose the file under Price data and estimate files. Until then you can add a manual line for anything.`}</p>
    <div class="fields">${regionSelect("c-region",region)}</div>

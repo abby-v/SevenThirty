@@ -20,7 +20,12 @@ function rateLookup(ctx,region){
     return {v:0,src:"missing",key};
   };
 }
+/** Zone-redundant storage only exists in regions with availability zones (UK West has none).
+ *  Offer ZRS when the region's price data has ZRS meters, or when no data is loaded for it yet. */
+function redOpts(ctx,opts){const R=(ctx.snap&&ctx.snap.regions||{})[ctx.region];if(!R)return opts;return Object.keys(R).some(k=>k.endsWith("_ZRS"))?opts:opts.filter(o=>o!=="ZRS");}
 const has=(r,key)=>r(key).src!=="missing";
+/** A rate published for this region (or a shared global meter), not a stand-in from elsewhere. */
+const ok=(r,key)=>{const x=r(key).src;return x!=="missing"&&x!=="proxy";};
 function globalHours(ctx){return ctx.mode==="custom"?Math.max(0,Math.min(744,Number(ctx.custom)||0)):Number(ctx.mode||730);}
 function hoursOf(ctx,v){const g=globalHours(ctx);if(v!==""&&v!=null&&!isNaN(Number(v))){const x=Math.max(0,Math.min(744,Number(v)));return {v:x,t:`${n(x)} h`,ov:true};}return {v:g,t:`${n(g)} h`,ov:false};}
 const PRICING=[["payg","Pay-as-you-go"],["ri1","1-year reservation"],["ri3","3-year reservation"],["sp1","1-year savings plan"],["sp3","3-year savings plan"]];
@@ -57,4 +62,4 @@ function sqlLines(p,c,h,r){const t=c.tier==="General Purpose"?"gp":"bc";const q=
   if(c.lic==="Licence included")o.push(HL("standing","SQL licence",q,r(`sql_lic_${t}`),h,`${n(c.dbs)} × ${c.vc} vCores`));
   return o;}
 
-export { rateLookup, has, globalHours, hoursOf, PRICING, vmSizes, pricingOpts, vmLines, DISK_OPTS, diskLines, sentTierCost, sqlLines };
+export { redOpts, ok, rateLookup, has, globalHours, hoursOf, PRICING, vmSizes, pricingOpts, vmLines, DISK_OPTS, diskLines, sentTierCost, sqlLines };

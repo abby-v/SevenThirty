@@ -1,7 +1,7 @@
 // SevenThirty: number formatting and the line-item helpers every calculator uses.
 const gbp=(v,dp=2)=>(v<0?"−":"")+"£"+Math.abs(v).toLocaleString("en-GB",{minimumFractionDigits:dp,maximumFractionDigits:dp});
 const n=v=>Number(v).toLocaleString("en-GB",{maximumFractionDigits:2});
-function money(v){return "£"+(v>=100?v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}):v>=1?v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:4}):v.toLocaleString("en-GB",{minimumFractionDigits:4,maximumFractionDigits:6}));}
+function money(v){if(v>0&&v<0.001)return "£"+v.toLocaleString("en-GB",{maximumSignificantDigits:3});return "£"+(v>=100?v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:2}):v>=1?v.toLocaleString("en-GB",{minimumFractionDigits:2,maximumFractionDigits:4}):v.toLocaleString("en-GB",{minimumFractionDigits:4,maximumFractionDigits:6}));}
 const scalar=v=>Array.isArray(v)?v[0][1]:Number(v)||0;
 const rt=r=>money(scalar(r.v));
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));

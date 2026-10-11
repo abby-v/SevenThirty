@@ -120,6 +120,12 @@ ER_GW_SKUS = ["ErGw1AZ", "ErGw2AZ", "ErGw3AZ"]
 ER_BANDWIDTHS = ["50 Mbps", "100 Mbps", "200 Mbps", "500 Mbps", "1 Gbps", "2 Gbps", "5 Gbps", "10 Gbps"]
 
 
+def _sig(x: float) -> float:
+    """Round a price to 8 significant figures. Fixed decimal places would wipe out per-second
+    meters (Container Apps, Functions) that cost a few millionths of a pound."""
+    return float(f"{float(x):.8g}")
+
+
 def _m(service=None, product=None, sku=None, meter=None):
     def pred(i):
         return ((service is None or i.get("serviceName") == service)
@@ -148,14 +154,14 @@ def vm_rates(items: list[dict]) -> dict:
         res = [i for i in items if i.get("type") == "Reservation" and i.get("armSkuName") == sku and i.get("serviceName") == "Virtual Machines"]
         p = f"vm_{sku}"
         if lin:
-            out[p + "_lin"] = round(float(lin[0]["retailPrice"]), 6)
+            out[p + "_lin"] = _sig(float(lin[0]["retailPrice"]))
             for sp in lin[0].get("savingsPlan") or []:
                 term = sp.get("term", "")
                 key = "_sp1" if term.startswith("1") else "_sp3" if term.startswith("3") else None
                 if key:
-                    out[p + key] = round(float(sp.get("retailPrice") or sp.get("unitPrice") or 0), 6)
+                    out[p + key] = _sig(sp.get("retailPrice") or sp.get("unitPrice") or 0)
         if win:
-            out[p + "_win"] = round(float(win[0]["retailPrice"]), 6)
+            out[p + "_win"] = _sig(float(win[0]["retailPrice"]))
         for i in res:
             term = i.get("reservationTerm", "")
             out[p + ("_ri1" if term.startswith("1") else "_ri3")] = round(float(i["retailPrice"]), 4)
@@ -422,7 +428,7 @@ def aoai_rates(items: list[dict]) -> dict:
             return None
         unit = str(i.get("unitOfMeasure", "")).upper().replace(" ", "")
         mult = 1000 if unit == "1K" else 1_000_000 if unit in ("1", "") else 1
-        return round(float(i["retailPrice"]) * mult, 6)
+        return _sig(float(i["retailPrice"]) * mult)
     for mid, (_, sin, sout, scin) in AOAI_MODELS.items():
         p_in = per_m(sin)
         if p_in is None:
@@ -491,16 +497,16 @@ def build_rates(items: list[dict]) -> dict:
             continue
         tiers = sorted({(float(i.get("tierMinimumUnits") or 0), float(i["retailPrice"])) for i in hits})
         if tiered == "max":
-            out[key] = round(max(p for _, p in tiers), 6)
+            out[key] = _sig(max(p for _, p in tiers))
         elif tiered:
             collapsed = []
             for lo, p in tiers:
                 if collapsed and collapsed[-1][1] == p:
                     continue
-                collapsed.append([lo, round(p, 6)])
+                collapsed.append([lo, _sig(p)])
             out[key] = collapsed if len(collapsed) > 1 else collapsed[0][1]
         else:
-            out[key] = round(tiers[0][1], 6)
+            out[key] = _sig(tiers[0][1])
         if key.startswith(COMMIT_PREFIXES):
             out.update(commit_rates(key, hits, items))
     # Reservations for SQL Database and Managed Instance compute (price per vCore for the term)
@@ -523,7 +529,7 @@ def commit_rates(key: str, hits: list[dict], items: list[dict]) -> dict:
         term = sp.get("term", "")
         price = float(sp.get("retailPrice") or sp.get("unitPrice") or 0)
         if price and term[:1] in ("1", "3"):
-            out[f"{key}_sp{term[0]}"] = round(price, 6)
+            out[f"{key}_sp{term[0]}"] = _sig(price)
     same = ("serviceName", "productName", "skuName")
     for i in items:
         if i.get("type") == "Reservation" and all(i.get(f) == first.get(f) for f in same):
@@ -585,10 +591,10 @@ def build_catalog_rows(items: list[dict], strings: Strings) -> list[list]:
         payg = tiers[0][1]
         rows.append([
             strings.id(svc), strings.id(prod), strings.id(sku), strings.id(meter), strings.id(g["unit"]),
-            round(payg, 6),
-            [[lo, round(p, 6)] for lo, p in tiers] if len(tiers) > 1 else 0,
+            _sig(payg),
+            [[lo, _sig(p)] for lo, p in tiers] if len(tiers) > 1 else 0,
             round(g["ri1"], 4) or 0, round(g["ri3"], 4) or 0,
-            round(g["sp1"], 6) or 0, round(g["sp3"], 6) or 0,
+            _sig(g["sp1"]) or 0, _sig(g["sp3"]) or 0,
             strings.id(g["family"]),
         ])
     return rows
