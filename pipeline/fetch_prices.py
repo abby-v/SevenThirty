@@ -60,7 +60,50 @@ RATE_SERVICES = [
     "ExpressRoute", "Azure Front Door Service", "Azure DNS", "Traffic Manager",
     "Virtual Machines", "Storage", "Azure Kubernetes Service", "SQL Database", "SQL Managed Instance",
     "Log Analytics", "Sentinel", "Microsoft Defender for Cloud", "Key Vault", "Backup",
+    # Apps and integration, containers, databases, monitoring and management, analytics and AI
+    "Azure App Service", "Functions", "Azure Container Apps", "Container Registry", "API Management",
+    "Service Bus", "Event Hubs", "Azure Database for PostgreSQL", "Azure Database for MySQL",
+    "Azure Site Recovery", "Azure NetApp Files", "Azure Monitor", "Network Watcher", "Azure Arc",
+    "Azure Update Manager", "Azure Data Factory v2", "Microsoft Fabric", "Foundry Models", "Azure Databricks",
 ]
+
+# App Service plan sizes: (product suffix, [skuName, ...]). Keys are app_<win|lin>_<sku without spaces>.
+APP_SIZES = [
+    ("Basic", ["B1", "B2", "B3"]),
+    ("Standard", ["S1", "S2", "S3"]),
+    ("Premium v3", ["P0v3", "P1 v3", "P2 v3", "P3 v3", "P1mv3", "P2mv3", "P3mv3"]),
+    ("Premium v4", ["P0v4", "P1v4", "P2v4", "P3v4", "P1mv4", "P2mv4", "P3mv4"]),
+    ("Isolated v2", ["I1 v2", "I2 v2", "I3 v2", "I1mv2", "I2mv2", "I3mv2"]),
+]
+APIM_CLASSIC = ["Developer", "Basic", "Standard", "Premium"]
+APIM_V2 = ["Basic v2", "Standard v2", "Premium v2"]
+PG_BURST = {"B1ms": "B1MS", "B2s": "B2S", "B2ms": "B2ms", "B4ms": "B4ms", "B8ms": "B8ms"}
+MY_BURST = {"B1ms": "B1MS", "B2s": "B2S", "B2ms": "Standard_B2ms2", "B4ms": "Standard_B4ms", "B8ms": "Standard_B8ms"}
+
+# Azure OpenAI pay-as-you-go models: id -> (label, input sku, output sku, cached input sku or None).
+# Microsoft names these inconsistently and prices older models per 1K tokens; every rate is stored
+# per 1M tokens as aoai_<id>_in / _out / _cin. Models come and go, so a model that disappears is
+# not treated as a failed price check (see validate). Add new models here.
+AOAI_MODELS = {
+    "g55": ("GPT-5.5, Global", "5.5 ShortCo inp Gl", "5.5 ShortCo opt Gl", "5.5 ShortCo cd inp Gl"),
+    "g54": ("GPT-5.4, Global", "5.4 inp Gl", "5.4 opt Gl", "5.4 cd inp Gl"),
+    "g54m": ("GPT-5.4 mini, Global", "5.4 mini Inp Gl", "5.4 mini Opt Gl", "5.4 mini cd Inp Gl"),
+    "g54n": ("GPT-5.4 nano, Global", "5.4 nano Inp Gl", "5.4 nano Opt Gl", "5.4 nano cd Inp Gl"),
+    "g5": ("GPT-5, Global", "5 pp inp Gl", "5 pp opt Gl", "5 pp cd inp Gl"),
+    "g41": ("GPT-4.1, Global", "gpt 4.1 Inp glbl", "gpt 4.1 Outp glbl", "gpt 4.1 cached Inp glbl"),
+    "g41m": ("GPT-4.1 mini, Global", "gpt 4.1 mini Inp glbl", "gpt 4.1 mini Outp glbl", "gpt 4.1 mini cached Inp glbl"),
+    "g41mr": ("GPT-4.1 mini, Regional", "gpt 4.1 mini Inp regnl", "gpt 4.1 mini Outp regnl", "gpt 4.1 mini cached Inp regnl"),
+    "g4o": ("GPT-4o, Global", "gpt 4o 1120 Inp glbl", "gpt 4o 1120 Outp glbl", "gpt 4o 1120 cached Inp glbl"),
+    "g4or": ("GPT-4o, Regional", "gpt 4o 1120 Inp regnl", "gpt 4o 1120 Outp regnl", "gpt 4o 1120 cached Inp regnl"),
+    "g4om": ("GPT-4o mini, Global", "gpt-4o-mini-0718-Inp-glbl", "gpt-4o-mini-0718-Outp-glbl", None),
+    "e3l": ("text-embedding-3-large, Global", "text-embedding-3-large-glbl", None, None),
+    "e3s": ("text-embedding-3-small, Global", "text-embedding-3-small-glbl", None, None),
+    "e3sr": ("text-embedding-3-small, Regional", "text-embedding-3-small-regional", None, None),
+}
+# Keys that may legitimately disappear from one day to the next (retired models).
+VOLATILE_PREFIXES = ("aoai_",)
+# Rule keys whose reservation and savings plan prices are also kept, as <key>_ri1/_ri3 (term totals) and <key>_sp1/_sp3 (per unit).
+COMMIT_PREFIXES = ("app_",)
 
 # VM sizes offered in the guided calculators (VM, AKS, AVD). Add any size here.
 VM_SKUS = (
@@ -244,7 +287,152 @@ def meter_rules():
             (f"bas_{s}", _m("Azure Bastion", sku=s, meter=f"{s} Gateway"), False),
         ]
     r += [(f"bas_{s}_add", _m("Azure Bastion", sku=s, meter=f"{s} Additional Gateway"), False) for s in ("Standard", "Premium")]
+    r += app_rules()
     return r
+
+
+def app_rules():
+    """Apps and integration, containers, databases, monitoring and management, analytics and AI."""
+    r = []
+    # App Service plans, Windows and Linux
+    for tier, skus in APP_SIZES:
+        for sku in skus:
+            k = sku.replace(" ", "")
+            r.append((f"app_win_{k}", _m("Azure App Service", f"Azure App Service {tier} Plan", sku), False))
+            r.append((f"app_lin_{k}", _m("Azure App Service", f"Azure App Service {tier} Plan - Linux", sku), False))
+    r += [
+        # Functions
+        ("fn_flex_gbs", _m("Functions", "Flex Consumption", "On Demand", "On Demand Execution Time"), True),
+        ("fn_flex_exec", _m("Functions", "Flex Consumption", "On Demand", "On Demand Total Executions"), True),
+        ("fn_flex_ar_base", _m("Functions", "Flex Consumption", "Always Ready", "Always Ready Baseline"), False),
+        ("fn_flex_ar_gbs", _m("Functions", "Flex Consumption", "Always Ready", "Always Ready Execution Time"), False),
+        ("fn_prem_vcpu", _m("Functions", "Premium Functions", "Premium", "Premium vCPU Duration"), False),
+        ("fn_prem_mem", _m("Functions", "Premium Functions", "Premium", "Premium Memory Duration"), False),
+        # Container Apps
+        ("aca_vcpu_active", _m("Azure Container Apps", "Azure Container Apps", "Standard", "Standard vCPU Active Usage"), False),
+        ("aca_vcpu_idle", _m("Azure Container Apps", "Azure Container Apps", "Standard", "Standard vCPU Idle Usage"), False),
+        ("aca_mem_active", _m("Azure Container Apps", "Azure Container Apps", "Standard", "Standard Memory Active Usage"), False),
+        ("aca_mem_idle", _m("Azure Container Apps", "Azure Container Apps", "Standard", "Standard Memory Idle Usage"), False),
+        ("aca_req", _m("Azure Container Apps", "Azure Container Apps", "Standard", "Standard Requests"), False),
+        ("aca_ded_mgmt", _m("Azure Container Apps", "Azure Container Apps", "Dedicated", "Dedicated Plan Management"), False),
+        ("aca_ded_vcpu", _m("Azure Container Apps", "Azure Container Apps", "Dedicated", "Dedicated vCPU Usage"), False),
+        ("aca_ded_mem", _m("Azure Container Apps", "Azure Container Apps", "Dedicated", "Dedicated Memory Usage"), False),
+        # Container Registry
+        ("acr_Basic", _m("Container Registry", "Container Registry", "Basic", "Basic Registry Unit"), False),
+        ("acr_Standard", _m("Container Registry", "Container Registry", "Standard", "Standard Registry Unit"), False),
+        ("acr_Premium", _m("Container Registry", "Container Registry", "Premium", "Premium Registry Unit"), False),
+        ("acr_repl", _m("Container Registry", "Container Registry", "Premium", "Premium Registry Replication Unit"), False),
+        ("acr_gb", _m("Container Registry", "Container Registry", "Standard", "Data Stored"), False),
+        # Service Bus. Standard's base charge is listed as two rows (hourly and monthly); "max" keeps the monthly one.
+        ("sb_basic_ops", _m("Service Bus", sku="Basic", meter="Basic Messaging Operations"), False),
+        ("sb_std_base", _m("Service Bus", sku="Standard", meter="Standard Base Unit"), "max"),
+        ("sb_std_ops", _m("Service Bus", sku="Standard", meter="Standard Messaging Operations"), True),
+        ("sb_std_conn", _m("Service Bus", sku="Standard", meter="Standard Brokered Connection"), True),
+        ("sb_prem_mu", _m("Service Bus", sku="Premium", meter="Premium Messaging Unit"), False),
+        # Event Hubs
+        ("eh_Basic_tu", _m("Event Hubs", sku="Basic", meter="Basic Throughput Unit"), False),
+        ("eh_Basic_ingress", _m("Event Hubs", sku="Basic", meter="Basic Ingress Events"), False),
+        ("eh_Standard_tu", _m("Event Hubs", sku="Standard", meter="Standard Throughput Unit"), False),
+        ("eh_Standard_ingress", _m("Event Hubs", sku="Standard", meter="Standard Ingress Events"), False),
+        ("eh_capture", _m("Event Hubs", sku="Standard", meter="Standard Capture"), False),
+        ("eh_Premium_pu", _m("Event Hubs", sku="Premium", meter="Premium Processing Unit"), False),
+        ("eh_ret", _m("Event Hubs", sku="Premium", meter="Premium Extended Retention"), False),
+        ("eh_Dedicated_cu", _m("Event Hubs", sku="Dedicated", meter="Dedicated Capacity Unit"), False),
+        # PostgreSQL and MySQL flexible server: per-vCore rates for the v5 series, burstable sizes per server
+        ("pg_gp", _m("Azure Database for PostgreSQL", "Azure Database for PostgreSQL Flexible Server General Purpose Ddsv5 Series Compute", "1 vCore"), False),
+        ("pg_mo", _m("Azure Database for PostgreSQL", "Azure Database for PostgreSQL Flexible Server Memory Optimized Edsv5 Series Compute", "1 vCore"), False),
+        ("pg_storage", _m("Azure Database for PostgreSQL", "Azure Database for PostgreSQL Flex Server Storage", "Storage", "Storage Data Stored"), False),
+        ("pg_backup", _m("Azure Database for PostgreSQL", "Azure Database for PostgreSQL Flexible Server Backup Storage", "Backup Storage LRS", "Backup Storage LRS Data Stored"), False),
+        ("my_gp", _m("Azure Database for MySQL", "Azure Database for MySQL Flexible Server General Purpose Ddsv5 Series Compute", "1 vCore"), False),
+        # MySQL lists Memory Optimized v5 by size only; the 2-vCore size gives the per-vCore rate (the calculator halves it).
+        ("my_mo_2", _m("Azure Database for MySQL", "Azure Database for MySQL Flexible Server Memory Optimized Edsv5 Series Compute", "Standard_E2d_v5"), False),
+        ("my_storage", _m("Azure Database for MySQL", "Azure Database for MySQL Flexible Server Storage", "Storage", "Storage Data Stored"), False),
+        ("my_backup", _m("Azure Database for MySQL", "Azure Database for MySQL Flexible Server Backup Storage", "Backup Storage LRS", "Backup Storage LRS Data Stored"), False),
+        # Site Recovery
+        ("asr_vm", _m("Azure Site Recovery", sku="Azure", meter="VM Replicated to Azure"), False),
+        # Azure NetApp Files (per GiB per hour)
+        ("anf_Standard", _m("Azure NetApp Files", "Azure NetApp Files", "Standard", "Standard Capacity"), False),
+        ("anf_Premium", _m("Azure NetApp Files", "Azure NetApp Files", "Premium", "Premium Capacity"), False),
+        ("anf_Ultra", _m("Azure NetApp Files", "Azure NetApp Files", "Ultra", "Ultra Capacity"), False),
+        ("anf_backup", _m("Azure NetApp Files", "Azure NetApp Files", "Backup", "Backup Capacity"), False),
+        # Azure Monitor and Network Watcher
+        ("mon_alert_metric", _m("Azure Monitor", sku="Alerts", meter="Alerts Metric Monitored"), True),
+        ("mon_webtest", _m("Azure Monitor", sku="Standard Web Test", meter="Standard Web Test Execution"), False),
+        ("mon_basic_logs", _m("Azure Monitor", sku="Basic Logs", meter="Basic Logs Data Ingestion"), False),
+        ("nw_flow", _m("Network Watcher", sku="Standard", meter="Standard VNet Flow Logs Collected"), True),
+        ("nw_ta", _m("Network Watcher", sku="Standard", meter="Standard Traffic Analytics Processing"), False),
+        ("nw_cm", _m("Network Watcher", sku="Standard", meter="Standard Connection Monitor Test"), True),
+        # Azure Arc and Update Manager
+        ("upd_server", _m("Azure Update Manager", sku="Basic", meter="Basic Server"), False),
+        ("arc_guestcfg", _m("Azure Arc", sku="Server", meter="Guest Configuration Policy/Server"), False),
+        ("esu_std_1c", _m("Azure Arc", sku="WS2012 Std 1C", meter="WS2012 Std 1C ESU"), False),
+        ("esu_dc_1c", _m("Azure Arc", sku="WS2012 DC 1C", meter="WS2012 DC 1C ESU"), False),
+        # Data Factory
+        ("adf_orch_cloud", _m("Azure Data Factory v2", "Azure Data Factory v2", "Cloud", "Cloud Orchestration Activity Run"), False),
+        ("adf_orch_sh", _m("Azure Data Factory v2", "Azure Data Factory v2", "Self Hosted", "Self Hosted Orchestration Activity Run"), False),
+        ("adf_move_cloud", _m("Azure Data Factory v2", "Azure Data Factory v2", "Cloud", "Cloud Data Movement"), False),
+        ("adf_move_sh", _m("Azure Data Factory v2", "Azure Data Factory v2", "Self Hosted", "Self Hosted Data Movement"), False),
+        ("adf_act_cloud", _m("Azure Data Factory v2", "Azure Data Factory v2", "Cloud", "Cloud Pipeline Activity"), False),
+        ("adf_act_sh", _m("Azure Data Factory v2", "Azure Data Factory v2", "Self Hosted", "Self Hosted Pipeline Activity"), False),
+        ("adf_df_gp", _m("Azure Data Factory v2", "Azure Data Factory v2 Data Flow - General Purpose", "vCore", "vCore"), False),
+        # Microsoft Fabric: one capacity unit hour, and OneLake storage
+        ("fabric_cu", _m("Microsoft Fabric", "Fabric Capacity", "Compute Pool Capacity Usage", "Compute Pool Capacity Usage CU"), False),
+        ("onelake_hot", _m("Microsoft Fabric", "OneLake", "OneLake Storage Hot", "OneLake Storage Hot Data Stored"), False),
+        # Azure Databricks, Premium tier, per DBU hour
+        ("dbx_jobs", _m("Azure Databricks", "Azure Databricks", "Premium Jobs Compute", "Premium Jobs Compute DBU"), False),
+        ("dbx_allpurpose", _m("Azure Databricks", "Azure Databricks", "Premium All-purpose Compute", "Premium All-purpose Compute DBU"), False),
+        ("dbx_sqlpro", _m("Azure Databricks", "Azure Databricks Regional", "Premium SQL Compute Pro", "Premium SQL Compute Pro DBU"), False),
+        ("dbx_sqlsl", _m("Azure Databricks", "Azure Databricks Regional", "Premium Serverless SQL", "Premium Serverless SQL DBU"), False),
+        ("dbx_jobssl", _m("Azure Databricks", "Azure Databricks Regional", "Premium Automated Serverless Compute", "Premium Automated Serverless Compute DBU"), False),
+        ("dbx_intsl", _m("Azure Databricks", "Azure Databricks Regional", "Premium Interactive Serverless Compute", "Premium Interactive Serverless Compute DBU"), False),
+    ]
+    # API Management
+    r += [(f"apim_{t.replace(' ', '')}", _m("API Management", sku=t, meter=f"{t} Unit"), False) for t in APIM_CLASSIC + APIM_V2]
+    r += [(f"apim_{t.replace(' ', '')}_calls", _m("API Management", sku=t, meter=f"{t} Calls"), True) for t in ("Consumption", "Basic v2", "Standard v2")]
+    r += [(f"apim_{t.replace(' ', '')}_extra", _m("API Management", sku=t, meter=f"{t} Secondary Unit"), False) for t in APIM_V2]
+    r += [("apim_Premium_extra", _m("API Management", sku="Secondary", meter="Secondary Unit"), False)]
+    # PostgreSQL and MySQL burstable sizes
+    r += [(f"pg_{k}", _m("Azure Database for PostgreSQL", "Azure Database for PostgreSQL Flexible Server Burstable BS Series Compute", s), False) for k, s in PG_BURST.items()]
+    r += [(f"my_{k}", _m("Azure Database for MySQL", "Azure Database for MySQL Flexible Server Burstable BS Series Compute", s), False) for k, s in MY_BURST.items()]
+    # Azure Files Standard, pay-as-you-go v2 (Hot and Cool)
+    for tier in ("Hot", "Cool"):
+        for red in ("LRS", "ZRS", "GRS"):
+            r.append((f"fstd_{tier}_{red}", _m("Storage", "Files v2", f"{tier} {red}", f"{tier} {red} Data Stored"), False))
+            r.append((f"fstdw_{tier}_{red}", _m("Storage", "Files v2", f"{tier} {red}", f"{tier} {red} Write Operations"), False))
+        r.append((f"fstdr_{tier}", _m("Storage", "Files v2", f"{tier} LRS", f"{tier} Read Operations"), False))
+    # Azure OpenAI provisioned throughput units
+    for k, sku in (("global", "Provisioned Managed Global"), ("dz", "Provisioned Managed Data Zone"), ("regional", "Provisioned Managed Regional")):
+        r.append((f"aoai_ptu_{k}", lambda i, s=sku: i.get("serviceName") == "Foundry Models" and str(i.get("productName", "")).startswith("Azure OpenAI")
+                  and i.get("skuName") == s and i.get("meterName") == f"{s} Unit", False))
+    return r
+
+
+def aoai_rates(items: list[dict]) -> dict:
+    """Azure OpenAI pay-as-you-go token prices for AOAI_MODELS, normalised to per 1M tokens."""
+    out: dict = {}
+    rows = {}
+    for i in items:
+        if i.get("type") != "Consumption" or i.get("serviceName") != "Foundry Models" or not str(i.get("productName", "")).startswith("Azure OpenAI"):
+            continue
+        rows.setdefault(str(i.get("skuName", "")).lower(), i)
+    def per_m(sku):
+        i = rows.get(sku.lower()) if sku else None
+        if not i:
+            return None
+        unit = str(i.get("unitOfMeasure", "")).upper().replace(" ", "")
+        mult = 1000 if unit == "1K" else 1_000_000 if unit in ("1", "") else 1
+        return round(float(i["retailPrice"]) * mult, 6)
+    for mid, (_, sin, sout, scin) in AOAI_MODELS.items():
+        p_in = per_m(sin)
+        if p_in is None:
+            continue
+        out[f"aoai_{mid}_in"] = p_in
+        p_out, p_cin = per_m(sout), per_m(scin)
+        if p_out is not None:
+            out[f"aoai_{mid}_out"] = p_out
+        if p_cin is not None:
+            out[f"aoai_{mid}_cin"] = p_cin
+    return out
 
 
 # ---------------------------------------------------------------- API access
@@ -301,7 +489,9 @@ def build_rates(items: list[dict]) -> dict:
         if not hits:
             continue
         tiers = sorted({(float(i.get("tierMinimumUnits") or 0), float(i["retailPrice"])) for i in hits})
-        if tiered:
+        if tiered == "max":
+            out[key] = round(max(p for _, p in tiers), 6)
+        elif tiered:
             collapsed = []
             for lo, p in tiers:
                 if collapsed and collapsed[-1][1] == p:
@@ -310,6 +500,8 @@ def build_rates(items: list[dict]) -> dict:
             out[key] = collapsed if len(collapsed) > 1 else collapsed[0][1]
         else:
             out[key] = round(tiers[0][1], 6)
+        if key.startswith(COMMIT_PREFIXES):
+            out.update(commit_rates(key, hits, items))
     # Reservations for SQL Database and Managed Instance compute (price per vCore for the term)
     for key, prod in (("sql_gp", "SQL Database Single/Elastic Pool General Purpose - Compute Gen5"), ("sql_bc", "SQL Database Single/Elastic Pool Business Critical - Compute Gen5"),
                       ("mi_gp", "SQL Managed Instance General Purpose - Compute Gen5"), ("mi_bc", "SQL Managed Instance Business Critical - Compute Gen5")):
@@ -318,6 +510,25 @@ def build_rates(items: list[dict]) -> dict:
                 term = i.get("reservationTerm", "")
                 out[key + ("_ri1" if term.startswith("1") else "_ri3")] = round(float(i["retailPrice"]), 4)
     out.update(vm_rates(items))
+    out.update(aoai_rates(items))
+    return out
+
+
+def commit_rates(key: str, hits: list[dict], items: list[dict]) -> dict:
+    """Savings plan (per unit) and reservation (term total) prices for the meter a rule matched."""
+    out: dict = {}
+    first = hits[0]
+    for sp in first.get("savingsPlan") or []:
+        term = sp.get("term", "")
+        price = float(sp.get("retailPrice") or sp.get("unitPrice") or 0)
+        if price and term[:1] in ("1", "3"):
+            out[f"{key}_sp{term[0]}"] = round(price, 6)
+    same = ("serviceName", "productName", "skuName")
+    for i in items:
+        if i.get("type") == "Reservation" and all(i.get(f) == first.get(f) for f in same):
+            term = i.get("reservationTerm", "")
+            if term[:1] in ("1", "3"):
+                out[f"{key}_ri{term[0]}"] = round(float(i["retailPrice"]), 4)
     return out
 
 
@@ -396,7 +607,8 @@ def validate(new: dict, previous: dict | None, threshold: float) -> list[str]:
             if not isinstance(old, (int, float)):
                 continue
             if k not in cur:
-                problems.append(f"{region}.{k}: meter disappeared")
+                if not k.startswith(VOLATILE_PREFIXES):
+                    problems.append(f"{region}.{k}: meter disappeared")
             elif isinstance(cur[k], (int, float)) and old and abs(cur[k] - old) / old > threshold:
                 problems.append(f"{region}.{k}: {old} -> {cur[k]} ({(cur[k]-old)/old:+.0%})")
     return problems

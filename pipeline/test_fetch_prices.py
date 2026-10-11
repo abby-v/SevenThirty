@@ -122,5 +122,42 @@ class SiteData(unittest.TestCase):
         self.assertEqual(first, self.read("catalogue.json")["catalog"])
 
 
+class NewServices(unittest.TestCase):
+    def test_app_service_keeps_reservation_and_savings_plan_prices(self):
+        prod = "Azure App Service Premium v3 Plan"
+        items = [
+            meter("Azure App Service", prod, "P1 v3", "P1 v3 App", 0.25, savingsPlan=[{"term": "1 Year", "retailPrice": 0.21}, {"term": "3 Years", "retailPrice": 0.19}]),
+            meter("Azure App Service", prod, "P1 v3", "P1 v3 App", 1646.1, type_="Reservation", reservationTerm="1 Year"),
+            meter("Azure App Service", prod, "P1 v3", "P1 v3 App", 3987.32, type_="Reservation", reservationTerm="3 Years"),
+        ]
+        r = fp.build_rates(items)
+        self.assertEqual((r["app_win_P1v3"], r["app_win_P1v3_sp1"], r["app_win_P1v3_sp3"]), (0.25, 0.21, 0.19))
+        self.assertEqual((r["app_win_P1v3_ri1"], r["app_win_P1v3_ri3"]), (1646.1, 3987.32))
+
+    def test_openai_prices_are_per_million_tokens_whatever_microsoft_lists(self):
+        items = [
+            meter("Foundry Models", "Azure OpenAI", "gpt 4.1 Inp glbl", "gpt 4.1 Inp glbl Tokens", 0.001509, unit="1K"),
+            meter("Foundry Models", "Azure OpenAI", "gpt 4.1 Outp glbl", "gpt 4.1 Outp glbl Tokens", 0.006038, unit="1K"),
+            meter("Foundry Models", "Azure OpenAI GPT5", "5.4 inp Gl", "5.4 inp Gl 1M Tokens", 1.886864, unit="1M"),
+            meter("Foundry Models", "Azure Grok Models", "5.4 opt Gl", "not OpenAI", 99, unit="1M"),
+        ]
+        r = fp.build_rates(items)
+        self.assertEqual((r["aoai_g41_in"], r["aoai_g41_out"]), (1.509, 6.038))
+        self.assertEqual(r["aoai_g54_in"], 1.886864)
+        self.assertNotIn("aoai_g54_out", r, "other model families must not be read as OpenAI")
+
+    def test_service_bus_standard_base_uses_the_monthly_row(self):
+        items = [meter("Service Bus", "Service Bus", "Standard", "Standard Base Unit", 0.010145, unit="1/Month"),
+                 meter("Service Bus", "Service Bus", "Standard", "Standard Base Unit", 7.547455, unit="1/Month")]
+        self.assertEqual(fp.build_rates(items)["sb_std_base"], 7.547455)
+
+    def test_retired_openai_models_do_not_fail_the_price_check(self):
+        prev = {"regions": {"uksouth": {"aoai_g4o_in": 1.9, "pip_h": 0.004}}}
+        new = {"regions": {"uksouth": {"pip_h": 0.004}}}
+        self.assertEqual(fp.validate(new, prev, 0.25), [])
+        new = {"regions": {"uksouth": {"aoai_g4o_in": 1.9}}}
+        self.assertEqual(fp.validate(new, prev, 0.25), ["uksouth.pip_h: meter disappeared"])
+
+
 if __name__ == "__main__":
     unittest.main()

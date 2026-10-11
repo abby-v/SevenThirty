@@ -274,7 +274,7 @@ $("seg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)r
 $("customHours").addEventListener("input",e=>{S.custom=e.target.value;S.mode="custom";touched();document.querySelectorAll("#seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.mode===S.mode)));refresh();updateCfg();});
 [["dClient","client"],["dTitle","title"],["dBy","by"],["dStatus","status"]].forEach(([i,k])=>$(i).addEventListener("input",e=>{S.meta[k]=e.target.value;touched();}));
 [["aStart","start"],["aTerm","term"],["aLive","live"],["aRamp","ramp"],["aDisc","disc"],["aCont","cont"]].forEach(([i,k])=>{const h=e=>{S.acr[k]=e.target.value;touched();refresh();};$(i).addEventListener("input",h);$(i).addEventListener("change",h);});
-$("themeBtn").addEventListener("click",()=>{const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");document.documentElement.setAttribute("data-theme",cur==="dark"?"light":"dark");});
+$("themeBtn").addEventListener("click",()=>{const cur=document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");const next=cur==="dark"?"light":"dark";document.documentElement.setAttribute("data-theme",next);try{localStorage.setItem("st-theme",next);}catch(e){}});
 $("newEst").addEventListener("click",()=>{startNew();toast("New estimate started. The previous one is under Your estimates.");});
 $("savedList").addEventListener("click",e=>{const b=e.target.closest("button[data-sact]");if(!b)return;const id=b.closest("[data-sid]").dataset.sid;const list=loadSaved();const rec=list.find(x=>x.id===id);if(!rec)return;
   if(b.dataset.sact==="open"){openEstimate(rec.data);toast(`Opened ${rec.name}`);return;}
