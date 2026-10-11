@@ -1,4 +1,1181 @@
 {
- "generatedAt": "2026-10-11T05:05:41Z",
- "changes": []
+ "generatedAt": "2026-10-11T05:28:06Z",
+ "changes": [
+  {
+   "region": "Zone 1",
+   "key": "afd_Premium_base",
+   "old": 249.066002,
+   "new": 249.066
+  },
+  {
+   "region": "Zone 1",
+   "key": "dns_res_in",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 1",
+   "key": "dns_res_out",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_50Mbps",
+   "old": 226.423639,
+   "new": 226.42364
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_50Mbps",
+   "old": 283.029548,
+   "new": 283.02955
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_100Mbps",
+   "old": 150.949092,
+   "new": 150.94909
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_100Mbps",
+   "old": 433.978641,
+   "new": 433.97864
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_100Mbps",
+   "old": 509.453187,
+   "new": 509.45319
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_200Mbps",
+   "old": 109.438092,
+   "new": 109.43809
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_200Mbps",
+   "old": 222.649911,
+   "new": 222.64991
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_200Mbps",
+   "old": 867.957281,
+   "new": 867.95728
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_200Mbps",
+   "old": 981.169101,
+   "new": 981.1691
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_500Mbps",
+   "old": 218.876184,
+   "new": 218.87618
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_500Mbps",
+   "old": 520.774369,
+   "new": 520.77437
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_500Mbps",
+   "old": 2075.550021,
+   "new": 2075.55
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_500Mbps",
+   "old": 2377.448206,
+   "new": 2377.4482
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_1Gbps",
+   "old": 329.069021,
+   "new": 329.06902
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_1Gbps",
+   "old": 895.128118,
+   "new": 895.12812
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_1Gbps",
+   "old": 4302.049134,
+   "new": 4302.0491
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_1Gbps",
+   "old": 4868.10823,
+   "new": 4868.1082
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_2Gbps",
+   "old": 658.138043,
+   "new": 658.13804
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_2Gbps",
+   "old": 1790.256236,
+   "new": 1790.2562
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_2Gbps",
+   "old": 8604.098268,
+   "new": 8604.0983
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_2Gbps",
+   "old": 9736.216461,
+   "new": 9736.2165
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_5Gbps",
+   "old": 1645.345107,
+   "new": 1645.3451
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_5Gbps",
+   "old": 3909.581494,
+   "new": 3909.5815
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_5Gbps",
+   "old": 19359.221103,
+   "new": 19359.221
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_5Gbps",
+   "old": 21623.457489,
+   "new": 21623.457
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_metered_10Gbps",
+   "old": 2566.134571,
+   "new": 2566.1346
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_metered_10Gbps",
+   "old": 4830.370957,
+   "new": 4830.371
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_std_unl_10Gbps",
+   "old": 38718.442205,
+   "new": 38718.442
+  },
+  {
+   "region": "Zone 1",
+   "key": "er_prem_unl_10Gbps",
+   "old": 40982.678592,
+   "new": 40982.679
+  },
+  {
+   "region": "Zone 2",
+   "key": "afd_Premium_base",
+   "old": 249.066002,
+   "new": 249.066
+  },
+  {
+   "region": "Zone 2",
+   "key": "dns_res_in",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 2",
+   "key": "dns_res_out",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_50Mbps",
+   "old": 116.985547,
+   "new": 116.98555
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_50Mbps",
+   "old": 460.394732,
+   "new": 460.39473
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_50Mbps",
+   "old": 535.869278,
+   "new": 535.86928
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_100Mbps",
+   "old": 207.555002,
+   "new": 207.555
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_100Mbps",
+   "old": 928.336918,
+   "new": 928.33692
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_100Mbps",
+   "old": 1060.417374,
+   "new": 1060.4174
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_200Mbps",
+   "old": 109.438092,
+   "new": 109.43809
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_200Mbps",
+   "old": 335.861731,
+   "new": 335.86173
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_200Mbps",
+   "old": 1735.914563,
+   "new": 1735.9146
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_200Mbps",
+   "old": 1962.338201,
+   "new": 1962.3382
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_500Mbps",
+   "old": 218.876184,
+   "new": 218.87618
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_500Mbps",
+   "old": 822.672554,
+   "new": 822.67255
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_500Mbps",
+   "old": 3924.676403,
+   "new": 3924.6764
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_500Mbps",
+   "old": 4528.472773,
+   "new": 4528.4728
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_1Gbps",
+   "old": 329.069021,
+   "new": 329.06902
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_1Gbps",
+   "old": 1423.449942,
+   "new": 1423.4499
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_1Gbps",
+   "old": 6566.28552,
+   "new": 6566.2855
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_1Gbps",
+   "old": 7660.66644,
+   "new": 7660.6664
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_2Gbps",
+   "old": 658.138043,
+   "new": 658.13804
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_2Gbps",
+   "old": 2356.315333,
+   "new": 2356.3153
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_2Gbps",
+   "old": 13132.57104,
+   "new": 13132.571
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_2Gbps",
+   "old": 14830.74833,
+   "new": 14830.748
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_5Gbps",
+   "old": 1645.345107,
+   "new": 1645.3451
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_5Gbps",
+   "old": 3909.581494,
+   "new": 3909.5815
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_5Gbps",
+   "old": 30944.563946,
+   "new": 30944.564
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_5Gbps",
+   "old": 33208.800332,
+   "new": 33208.8
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_metered_10Gbps",
+   "old": 2566.134571,
+   "new": 2566.1346
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_metered_10Gbps",
+   "old": 4830.370957,
+   "new": 4830.371
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_std_unl_10Gbps",
+   "old": 61889.127892,
+   "new": 61889.128
+  },
+  {
+   "region": "Zone 2",
+   "key": "er_prem_unl_10Gbps",
+   "old": 64153.364278,
+   "new": 64153.364
+  },
+  {
+   "region": "Zone 3",
+   "key": "afd_Premium_base",
+   "old": 249.066002,
+   "new": 249.066
+  },
+  {
+   "region": "Zone 3",
+   "key": "dns_res_in",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 3",
+   "key": "dns_res_out",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_50Mbps",
+   "old": 116.985547,
+   "new": 116.98555
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_50Mbps",
+   "old": 658.138043,
+   "new": 658.13804
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_50Mbps",
+   "old": 733.612589,
+   "new": 733.61259
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_100Mbps",
+   "old": 207.555002,
+   "new": 207.555
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_100Mbps",
+   "old": 981.169101,
+   "new": 981.1691
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_100Mbps",
+   "old": 1113.249557,
+   "new": 1113.2496
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_200Mbps",
+   "old": 109.438092,
+   "new": 109.43809
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_200Mbps",
+   "old": 335.861731,
+   "new": 335.86173
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_200Mbps",
+   "old": 2430.280388,
+   "new": 2430.2804
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_200Mbps",
+   "old": 2656.704027,
+   "new": 2656.704
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_500Mbps",
+   "old": 218.876184,
+   "new": 218.87618
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_500Mbps",
+   "old": 822.672554,
+   "new": 822.67255
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_500Mbps",
+   "old": 3924.676403,
+   "new": 3924.6764
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_500Mbps",
+   "old": 4528.472773,
+   "new": 4528.4728
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_1Gbps",
+   "old": 329.069021,
+   "new": 329.06902
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_1Gbps",
+   "old": 1423.449942,
+   "new": 1423.4499
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_1Gbps",
+   "old": 6566.28552,
+   "new": 6566.2855
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_1Gbps",
+   "old": 7660.66644,
+   "new": 7660.6664
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_2Gbps",
+   "old": 658.138043,
+   "new": 658.13804
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_2Gbps",
+   "old": 2356.315333,
+   "new": 2356.3153
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_2Gbps",
+   "old": 13132.57104,
+   "new": 13132.571
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_2Gbps",
+   "old": 14830.74833,
+   "new": 14830.748
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_5Gbps",
+   "old": 1645.345107,
+   "new": 1645.3451
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_5Gbps",
+   "old": 3909.581494,
+   "new": 3909.5815
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_5Gbps",
+   "old": 30944.563946,
+   "new": 30944.564
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_5Gbps",
+   "old": 33208.800332,
+   "new": 33208.8
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_metered_10Gbps",
+   "old": 2566.134571,
+   "new": 2566.1346
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_metered_10Gbps",
+   "old": 4830.370957,
+   "new": 4830.371
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_std_unl_10Gbps",
+   "old": 61889.127892,
+   "new": 61889.128
+  },
+  {
+   "region": "Zone 3",
+   "key": "er_prem_unl_10Gbps",
+   "old": 64153.364278,
+   "new": 64153.364
+  },
+  {
+   "region": "Zone 4",
+   "key": "afd_Premium_base",
+   "old": 249.066002,
+   "new": 249.066
+  },
+  {
+   "region": "Zone 4",
+   "key": "dns_res_in",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 4",
+   "key": "dns_res_out",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_50Mbps",
+   "old": 116.985547,
+   "new": 116.98555
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_50Mbps",
+   "old": 559.266387,
+   "new": 559.26639
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_50Mbps",
+   "old": 634.740934,
+   "new": 634.74093
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_100Mbps",
+   "old": 207.555002,
+   "new": 207.555
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_100Mbps",
+   "old": 1086.833465,
+   "new": 1086.8335
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_200Mbps",
+   "old": 109.438092,
+   "new": 109.43809
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_200Mbps",
+   "old": 335.861731,
+   "new": 335.86173
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_200Mbps",
+   "old": 2083.097475,
+   "new": 2083.0975
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_200Mbps",
+   "old": 2309.521114,
+   "new": 2309.5211
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_500Mbps",
+   "old": 218.876184,
+   "new": 218.87618
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_500Mbps",
+   "old": 822.672554,
+   "new": 822.67255
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_500Mbps",
+   "old": 3924.676403,
+   "new": 3924.6764
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_500Mbps",
+   "old": 4528.472773,
+   "new": 4528.4728
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_1Gbps",
+   "old": 329.069021,
+   "new": 329.06902
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_1Gbps",
+   "old": 1423.449942,
+   "new": 1423.4499
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_1Gbps",
+   "old": 6566.28552,
+   "new": 6566.2855
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_1Gbps",
+   "old": 7660.66644,
+   "new": 7660.6664
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_2Gbps",
+   "old": 658.138043,
+   "new": 658.13804
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_2Gbps",
+   "old": 2356.315333,
+   "new": 2356.3153
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_2Gbps",
+   "old": 13132.57104,
+   "new": 13132.571
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_2Gbps",
+   "old": 14830.74833,
+   "new": 14830.748
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_5Gbps",
+   "old": 1645.345107,
+   "new": 1645.3451
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_5Gbps",
+   "old": 3909.581494,
+   "new": 3909.5815
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_5Gbps",
+   "old": 30944.563946,
+   "new": 30944.564
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_5Gbps",
+   "old": 33208.800332,
+   "new": 33208.8
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_metered_10Gbps",
+   "old": 2566.134571,
+   "new": 2566.1346
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_metered_10Gbps",
+   "old": 4830.370957,
+   "new": 4830.371
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_std_unl_10Gbps",
+   "old": 61889.127892,
+   "new": 61889.128
+  },
+  {
+   "region": "Zone 4",
+   "key": "er_prem_unl_10Gbps",
+   "old": 64153.364278,
+   "new": 64153.364
+  },
+  {
+   "region": "",
+   "key": "dns_res_in",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "",
+   "key": "dns_res_out",
+   "old": 135.854183,
+   "new": 135.85418
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P20_ZRS",
+   "old": 100.298879,
+   "new": 100.29888
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P30_LRS",
+   "old": 123.437111,
+   "new": 123.43711
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P30_ZRS",
+   "old": 185.155666,
+   "new": 185.15567
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P40_LRS",
+   "old": 236.560549,
+   "new": 236.56055
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P40_ZRS",
+   "old": 354.840824,
+   "new": 354.84082
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_P50_LRS",
+   "old": 452.550587,
+   "new": 452.55059
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_E40_LRS",
+   "old": 127.521793,
+   "new": 127.52179
+  },
+  {
+   "region": "uksouth",
+   "key": "disk_E50_LRS",
+   "old": 255.043587,
+   "new": 255.04359
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_50",
+   "old": 152.128382,
+   "new": 152.12838
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_100",
+   "old": 279.255821,
+   "new": 279.25582
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_200",
+   "old": 517.000642,
+   "new": 517.00064
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_300",
+   "old": 754.745462,
+   "new": 754.74546
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_400",
+   "old": 978.648251,
+   "new": 978.64825
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_500",
+   "old": 1193.441262,
+   "new": 1193.4413
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_1000",
+   "old": 2339.710932,
+   "new": 2339.7109
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_2000",
+   "old": 4528.472773,
+   "new": 4528.4728
+  },
+  {
+   "region": "uksouth",
+   "key": "sent_5000",
+   "old": 10896.637609,
+   "new": 10896.638
+  },
+  {
+   "region": "ukwest",
+   "key": "disk_P30_LRS",
+   "old": 123.437111,
+   "new": 123.43711
+  },
+  {
+   "region": "ukwest",
+   "key": "disk_P40_LRS",
+   "old": 236.560549,
+   "new": 236.56055
+  },
+  {
+   "region": "ukwest",
+   "key": "disk_P50_LRS",
+   "old": 452.550587,
+   "new": 452.55059
+  },
+  {
+   "region": "ukwest",
+   "key": "disk_E40_LRS",
+   "old": 127.521793,
+   "new": 127.52179
+  },
+  {
+   "region": "ukwest",
+   "key": "disk_E50_LRS",
+   "old": 255.043587,
+   "new": 255.04359
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_50",
+   "old": 159.430545,
+   "new": 159.43054
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_100",
+   "old": 289.701498,
+   "new": 289.7015
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_200",
+   "old": 536.261746,
+   "new": 536.26175
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_300",
+   "old": 782.821993,
+   "new": 782.82199
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_400",
+   "old": 1014.996792,
+   "new": 1014.9968
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_500",
+   "old": 1237.669346,
+   "new": 1237.6693
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_1000",
+   "old": 2426.355712,
+   "new": 2426.3557
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_2000",
+   "old": 4695.724367,
+   "new": 4695.7244
+  },
+  {
+   "region": "ukwest",
+   "key": "sent_5000",
+   "old": 11298.162195,
+   "new": 11298.162
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P30_LRS",
+   "old": 102.018944,
+   "new": 102.01894
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P30_ZRS",
+   "old": 153.009548,
+   "new": 153.00955
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P40_LRS",
+   "old": 195.513567,
+   "new": 195.51357
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P40_ZRS",
+   "old": 293.271444,
+   "new": 293.27144
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P50_LRS",
+   "old": 374.025963,
+   "new": 374.02596
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_P50_ZRS",
+   "old": 561.047587,
+   "new": 561.04759
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_E40_LRS",
+   "old": 115.928903,
+   "new": 115.9289
+  },
+  {
+   "region": "northeurope",
+   "key": "disk_E50_LRS",
+   "old": 231.857806,
+   "new": 231.85781
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_50",
+   "old": 174.034869,
+   "new": 174.03487
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_100",
+   "old": 268.085588,
+   "new": 268.08559
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_200",
+   "old": 496.320616,
+   "new": 496.32062
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_300",
+   "old": 724.555644,
+   "new": 724.55564
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_400",
+   "old": 939.507151,
+   "new": 939.50715
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_500",
+   "old": 1145.703611,
+   "new": 1145.7036
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_1000",
+   "old": 2246.122495,
+   "new": 2246.1225
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_2000",
+   "old": 4347.333862,
+   "new": 4347.3339
+  },
+  {
+   "region": "northeurope",
+   "key": "sent_5000",
+   "old": 10460.772105,
+   "new": 10460.772
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_P30_LRS",
+   "old": 112.215555,
+   "new": 112.21555
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_P30_ZRS",
+   "old": 168.300691,
+   "new": 168.30069
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_P40_LRS",
+   "old": 215.054983,
+   "new": 215.05498
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_P50_LRS",
+   "old": 411.409563,
+   "new": 411.40956
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_P50_ZRS",
+   "old": 617.102532,
+   "new": 617.10253
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_E40_LRS",
+   "old": 115.928903,
+   "new": 115.9289
+  },
+  {
+   "region": "westeurope",
+   "key": "disk_E50_LRS",
+   "old": 231.857806,
+   "new": 231.85781
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_50",
+   "old": 174.034869,
+   "new": 174.03487
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_100",
+   "old": 288.946753,
+   "new": 288.94675
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_200",
+   "old": 534.903204,
+   "new": 534.9032
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_300",
+   "old": 780.859655,
+   "new": 780.85965
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_400",
+   "old": 1012.48349,
+   "new": 1012.4835
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_500",
+   "old": 1234.650364,
+   "new": 1234.6504
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_1000",
+   "old": 2420.468697,
+   "new": 2420.4687
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_2000",
+   "old": 4684.554134,
+   "new": 4684.5541
+  },
+  {
+   "region": "westeurope",
+   "key": "sent_5000",
+   "old": 11271.746104,
+   "new": 11271.746
+  }
+ ]
 }
