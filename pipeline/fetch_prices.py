@@ -357,6 +357,7 @@ def app_rules():
         ("anf_backup", _m("Azure NetApp Files", "Azure NetApp Files", "Backup", "Backup Capacity"), False),
         # Azure Monitor and Network Watcher
         ("mon_alert_metric", _m("Azure Monitor", sku="Alerts", meter="Alerts Metric Monitored"), True),
+        *[(f"mon_alert_log_{m}", _m("Azure Monitor", sku="Alerts", meter=f"Alerts System Log Monitored at {m} Minute Frequency"), False) for m in (1, 5, 10, 15)],
         ("mon_webtest", _m("Azure Monitor", sku="Standard Web Test", meter="Standard Web Test Execution"), False),
         ("mon_basic_logs", _m("Azure Monitor", sku="Basic Logs", meter="Basic Logs Data Ingestion"), False),
         ("nw_flow", _m("Network Watcher", sku="Standard", meter="Standard VNet Flow Logs Collected"), True),
