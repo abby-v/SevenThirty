@@ -15,6 +15,7 @@ Azure cost estimates in native GBP for MSP consultants, with the working shown o
 - **Every Azure service.** 47 guided calculators, plus search across every meter Microsoft publishes (about 24,700 for UK South, UK West and the global services), with reservation and savings plan prices where they exist. Calculators only offer the sizes and models Microsoft prices in the chosen region (for example, Premium v4 App Service and Azure OpenAI aren't offered in UK West).
 - **One hours model.** 730 h (always on), 217 h (office hours) or custom, with per-line overrides and warnings for resources that can't be paused.
 - **Native GBP.** Prices come from the Retail Prices API with `currencyCode='GBP'`; nothing is converted from USD.
+- **Possibly missing.** The estimate checks itself for costs that usually come with what's in it: backup, monitoring, Defender, Bastion and outbound internet for VMs; firewall, DDoS, private DNS and resolver, Log Analytics, flow logs, Key Vault and egress around a Virtual WAN or hub; monitoring, outbound and the on-premises link for AVD; registry and load balancer for AKS; private endpoints and Defender for databases; and more. Each comes with its monthly cost and sizing assumption. Add it in one click (or a whole group with Add all), or mark it not needed; the client pack lists anything left out under "Related costs not included". The rules are in `site/js/advisor.js`.
 - **ACR forecast.** Go-live month, ramp, discount and contingency, with a monthly chart and Microsoft fiscal-year (July–June) totals.
 - **Client pack.** A print-ready document (save as PDF from the print dialog): cover, executive summary, cost breakdown by section and region, commitment options for every eligible item with the possible saving, consumption forecast by contract and fiscal year, assumptions, exclusions, a planning range and the line-by-line working.
 - **Your estimates.** Every estimate saves automatically in your browser; open, duplicate or delete them from the estimate sheet. Copy the estimate file to move one to another computer.
@@ -43,6 +44,7 @@ GitHub runs scheduled workflows on a best-effort basis; on this repository they 
 | `site/js/services.js`, `site/js/services-more.js` | Every guided calculator: inputs, presets, notes and formula (apps, containers, more data services, analytics and AI, and monitoring are in `services-more.js`) |
 | `site/js/engine.js` | Prices items and whole estimates (pure functions, no DOM) |
 | `site/js/exports.js` | Markdown, CSV and assumptions |
+| `site/js/advisor.js` | Missing-cost advisor: which related costs each kind of resource usually needs |
 | `site/js/pack-data.js`, `site/pack.html`, `site/js/pack.js` | The client pack: its figures (tested) and the printable page |
 | `site/js/ui.js` | The page: menu, configurator, estimate sheet, price data loading |
 | `site/data/` | Price data written by the daily job |

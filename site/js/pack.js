@@ -136,6 +136,9 @@ function render(S, snap) {
   html.push(`<section aria-labelledby="h-ass"><h2 id="h-ass">Assumptions, exclusions and risks</h2>
     <h3>Assumptions</h3><ul class="list">${assumptions(S, R, snap).map((a) => `<li>${esc(a)}</li>`).join('')}</ul>
     <h3>Exclusions</h3><ul class="list"><li>VAT</li><li>Microsoft or partner support plans</li><li>Marketplace software and licences not listed</li><li>Partner professional and managed service fees</li><li>Data volumes and growth beyond those stated</li><li>One-off migration and parallel-running costs outside the forecast</li></ul>
+    ${P.advice.open.length || P.advice.dismissed.length ? `<h3>Related costs not included</h3>
+    <p>These usually come with the services in this estimate but are not costed in it.</p>
+    <ul class="list">${P.advice.dismissed.map((x) => `<li><b>${esc(x.title)}</b> (${esc(x.groupLabel.toLowerCase())}): out of scope.</li>`).join('')}${P.advice.open.map((x) => `<li><b>${esc(x.title)}</b> (${esc(x.groupLabel.toLowerCase())}): to be confirmed. ${esc(x.why)}</li>`).join('')}</ul>` : ''}
     <h3>Confidence</h3>
     <p>This is a${/^[AEIOU]/i.test(m.status || 'I') ? 'n' : ''} ${esc((m.status || 'Indicative').toLowerCase())} estimate. Plan on ${g0(P.confidence.low)} to ${g0(P.confidence.high)} a month (±${pct(P.confidence.pct)}) until quantities and data volumes are confirmed, starting with ${esc(P.drivers.map((d) => d.name).join(', '))}.</p>
     ${flaggedNote}

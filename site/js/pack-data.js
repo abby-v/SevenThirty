@@ -1,6 +1,7 @@
 // SevenThirty: everything the client pack shows, worked out from an estimate. Pure: no DOM.
 import { SECTIONS, SVCMAP } from './services.js';
 import { rateLookup } from './blocks.js';
+import { advise } from './advisor.js';
 import { computeAll, computeItem, itemSection, itemName, parseUnit, fiscalYears } from './engine.js';
 
 /** Planning range by estimate status, as a fraction either side of the monthly figure. */
@@ -82,5 +83,6 @@ export function buildPack(S, snap) {
     contractYears: years,
     fiscalYears: [...fiscalYears(acr.start, R.months).entries()],
     flagged,
+    advice: advise(S.items || [], S.dismissed || []),
   };
 }

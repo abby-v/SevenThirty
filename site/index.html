@@ -238,6 +238,31 @@ footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--mute
   body{padding-bottom:70px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Missing-cost advisor */
+.advice{margin-top:18px;border:1px solid var(--rule);border-radius:12px;background:var(--surface);padding:12px 12px 6px}
+.advice>h3{margin:0;font-size:.95rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.advice>h3 .cnt{font-family:var(--mono);font-size:.75rem;font-weight:500;background:var(--warn-bg);color:var(--warn-ink);border-radius:999px;padding:1px 8px}
+.advice>p{margin:2px 0 8px;color:var(--muted);font-size:.8rem}
+.advgrp{border-top:1px solid var(--rule);padding:8px 0 4px}
+.advgrp h4{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:.74rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+.advgrp h4 button{text-transform:none;letter-spacing:0}
+.advgrp ul,.advdis ul{list-style:none;margin:0;padding:0}
+.adv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:7px 0;border-top:1px dashed var(--rule)}
+.adv:first-child{border-top:0}
+.adv b{font-weight:600;font-size:.88rem}
+.adv .am{font-family:var(--mono);font-size:.8rem;white-space:nowrap;align-self:start;color:var(--muted)}
+.adv .why{grid-column:1/-1;font-size:.78rem;color:var(--muted);line-height:1.4}
+.adv .asm{grid-column:1/-1;font-size:.74rem;color:var(--muted);font-family:var(--mono)}
+.adv .acts{grid-column:1/-1;display:flex;gap:6px;margin-top:3px;flex-wrap:wrap}
+.advlink{border:0;background:transparent;color:var(--accent);font:inherit;font-size:.78rem;padding:2px 4px;cursor:pointer;min-height:24px}
+.advlink:hover{text-decoration:underline}
+.advdis{margin-top:6px;font-size:.8rem;color:var(--muted)}
+.advdis summary{cursor:pointer;padding:4px 0}
+.advdis li{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.advok{margin:0;color:var(--muted);font-size:.8rem}
+.goeswith{margin:10px 0 0;font-size:.8rem;color:var(--muted)}
+.goeswith b{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
@@ -283,6 +308,7 @@ footer{border-top:1px solid var(--rule);padding-block:16px 28px;color:var(--mute
           <span><span class="sw" style="background:var(--usage)"></span>Usage <b id="tU">£0.00</b></span>
         </div>
         <div id="groups" class="groups"></div>
+        <div id="advice"></div>
         <div id="adjust"></div>
         <div class="exports">
           <a class="btn primary full" id="packBtn" href="pack.html" target="_blank" rel="noopener">Open client pack (print or PDF)</a>

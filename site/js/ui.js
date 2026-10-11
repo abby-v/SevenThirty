@@ -3,6 +3,7 @@ import { REGIONS, regionName, zoneOf } from './regions.js';
 import { sizeAlias, gbp, n, money, scalar, esc, fmtDate, fmtStamp } from './format.js';
 import { rateLookup, globalHours } from './blocks.js';
 import { SECTIONS, SVCMAP, SECTION_ORDER, FAMILY_SEC, defaults } from './services.js';
+import { advise } from './advisor.js';
 import { computeItem, computeGeneric, qtyLabel, itemSection, itemName, itemSum, computeAll, monthLabel, fiscalYears } from './engine.js';
 import { toMarkdown, toCsv } from './exports.js';
 
@@ -101,6 +102,7 @@ function renderCfg(){
    <div id="cfgNotes"></div>
    <ul class="ledger" id="cfgLedger"></ul>
    <details class="rates" id="ratesBox"><summary>Rates used, editable for ${esc(regionName(d.region))}</summary><table class="rt" id="ratesTable"></table><div class="row"><button class="btn sm" type="button" id="resetRates">Reset rate edits for this region</button></div></details>
+   <div id="goesWith"></div>
    <div class="cta"><div class="price" id="cfgPrice">£0.00 <small>/ month</small></div><div class="acts">
      ${editing?`<button class="btn" type="button" id="addNew">Add as a new item</button><button class="btn primary big" type="button" id="saveEdit">Save changes</button>`:`<button class="btn primary big" type="button" id="addItem">Add to estimate</button>`}</div></div>`;
   updateCfg();
@@ -112,6 +114,7 @@ function updateCfg(){
   $("cfgLedger").innerHTML=(res.lines.length?res.lines.map(ledgerLi).join(""):`<li class="empty">Enter a quantity to see the working.</li>`)+
     (res.payg-res.amt>0.005?`<li class="empty">Pay-as-you-go would be ${gbp(res.payg)} a month: this pricing saves ${gbp(res.payg-res.amt)}.</li>`:"");
   $("cfgPrice").innerHTML=`${gbp(res.amt)} <small>/ month</small>`;
+  {const gw=$("goesWith");if(gw)gw.innerHTML=goesWith();}
   const notes=[...(def.notes?def.notes(res.c,res.h,{region:it.region},res.lines):[])];
   if(def.pause===false&&res.h&&res.h.v<730)notes.unshift({t:"note",x:`${def.name} has no stopped state. ${n(res.h.v)} h is only right if you delete and redeploy it on a schedule; otherwise use 730.`});
   if(res.lines.some(l=>l.srcs.some(s=>s.src==="proxy")))notes.unshift({t:"note",x:`Some rates aren't in today's price data for ${regionName(it.region)}, so a stand-in is used and flagged. Check the flagged lines before sharing.`});
@@ -176,6 +179,31 @@ function renderGenericEdit(it){const res=computeGeneric(C(),it);const pu=res.pu;
    </div><ul class="ledger" id="genLedger">${res.lines.map(ledgerLi).join("")}${res.payg-res.amt>0.005?`<li class="empty">Pay-as-you-go would be ${gbp(res.payg)}: saving ${gbp(res.payg-res.amt)} a month.</li>`:""}</ul>
    <div class="cta"><div class="price">${gbp(res.amt)} <small>/ month</small></div></div>`;}
 
+function openEdit(it){S.ui.editing=it.uid;if(it.svc==="generic"||it.svc==="manual"){S.ui.view="generic";}else{S.ui.view=it.svc;S.ui.draft={svc:it.svc,region:it.region,label:it.label,cfg:Object.assign(defaults(it.svc),it.cfg)};}
+  save();full();$("cfg").scrollIntoView?.({behavior:"smooth",block:"start"});}
+/* ---- Missing-cost advisor ---- */
+let ADV={open:[],dismissed:[]};
+function renderAdvice(){
+  const el=$("advice");if(!el)return;
+  if(!S.items.length){el.innerHTML="";return;}
+  ADV=advise(S.items,S.dismissed||[]);
+  const price=s=>s.add?computeItem(C(),{svc:s.add.svc,region:s.add.region,cfg:s.add.cfg}).amt:null;
+  const row=s=>{const p=price(s);return `<li class="adv" data-adv="${esc(s.id)}"><b>${esc(s.title)}${s.add?` <span style="font-weight:400;color:var(--muted)">· ${esc(regionName(s.region))}</span>`:""}</b><span class="am">${p!=null?`≈ ${gbp(p)}/mo`:""}</span>
+    <span class="why">${esc(s.why)}</span>${s.note?`<span class="asm">Adds: ${esc(s.note)}</span>`:""}
+    <span class="acts">${s.add?`<button type="button" class="btn sm primary" data-adv-act="add">Add</button>`:`<button type="button" class="btn sm" data-adv-act="edit">${esc(s.edit.label)}</button>`}<button type="button" class="advlink" data-adv-act="no">Not needed</button></span></li>`;};
+  const groups=[...new Set(ADV.open.map(s=>s.group))];
+  let h="";
+  if(ADV.open.length){h+=`<h3>Possibly missing <span class="cnt">${ADV.open.length}</span></h3><p>Costs that usually come with what's in this estimate. Add them, or mark them not needed so the client pack lists them as excluded.</p>`;
+    h+=groups.map(g=>{const its=ADV.open.filter(s=>s.group===g);const addable=its.filter(s=>s.add).length;
+      return `<div class="advgrp"><h4><span>${esc(its[0].groupLabel)}</span>${addable>1?`<button type="button" class="advlink" data-adv-all="${esc(g)}">Add all ${addable}</button>`:""}</h4><ul>${its.map(row).join("")}</ul></div>`;}).join("");}
+  else h+=`<h3>Possibly missing</h3><p class="advok">Nothing obvious is missing for the services in this estimate.</p>`;
+  if(ADV.dismissed.length)h+=`<details class="advdis"><summary>${ADV.dismissed.length} marked not needed (listed as exclusions in the client pack)</summary><ul>${ADV.dismissed.map(s=>`<li data-adv="${esc(s.id)}"><span>${esc(s.groupLabel)}: ${esc(s.title)}</span><button type="button" class="advlink" data-adv-act="restore">Restore</button></li>`).join("")}</ul></details>`;
+  el.innerHTML=`<section class="advice" aria-label="Possibly missing costs">${h}</section>`;
+}
+function addSuggestion(s){const it={uid:uid(),svc:s.add.svc,region:s.add.region,label:s.add.label,cfg:Object.assign({},s.add.cfg)};S.items.push(it);return it;}
+function goesWith(){if(S.ui.editing||!SVCMAP[S.ui.view])return "";const d=draftItem();if(!d)return "";
+  const base=new Set(advise(S.items).open.map(s=>s.id));const extra=advise([...S.items,{...d,uid:"draft"}]).open.filter(s=>!base.has(s.id));
+  return extra.length?`<p class="goeswith">Usually needed with this: <b>${esc(extra.map(s=>s.title).join(", "))}</b>. They'll appear under Possibly missing once it's added.</p>`:"";}
 /* =====================================================================
    RENDER: ESTIMATE
    ===================================================================== */
@@ -196,7 +224,7 @@ function renderSheet(){
   let adj="";if(R.commitSave>0.005)adj+=`<div class="adjrow"><span>Saving from commitments vs pay-as-you-go</span><span>${gbp(R.commitSave)}</span></div>`;
   if(R.disc>0)adj+=`<div class="adjrow"><span>Discount ${n(R.disc*100)}%</span><span>${gbp(-R.list*R.disc)}</span></div>`;
   if(R.cont>0)adj+=`<div class="adjrow"><span>Contingency ${n(R.cont*100)}%</span><span>${gbp(R.list*(1-R.disc)*R.cont)}</span></div>`;
-  $("adjust").innerHTML=adj;renderChart();renderFY();
+  $("adjust").innerHTML=adj;renderChart();renderFY();renderAdvice();
 }
 function niceMax(v){const p=Math.pow(10,Math.floor(Math.log10(v)));const m=v/p;return (m<=1?1:m<=2?2:m<=5?5:10)*p;}
 function shortGbp(v){return v>=1000?"£"+(v/1000).toLocaleString("en-GB",{maximumFractionDigits:1})+"k":"£"+Math.round(v);}
@@ -264,9 +292,18 @@ $("cfg").addEventListener("input",e=>{const k=e.target.dataset.rate;if(!k)return
 /* while editing an estimate item, changes in the configurator apply to it live */
 function syncEdit(){const ed=S.ui.editing&&S.items.find(x=>x.uid===S.ui.editing);if(ed){const d=S.ui.draft;ed.region=d.region;ed.label=d.label;ed.cfg=Object.assign({},d.cfg);touched();refresh();}else save();}
 function flashItem(id){const el=document.querySelector(`.it[data-uid="${id}"]`);if(el){el.classList.add("sel");setTimeout(()=>{if(S.ui.editing!==id)el.classList.remove("sel");},1600);}}
+$("advice").addEventListener("click",e=>{
+  const all=e.target.closest("button[data-adv-all]");
+  if(all){const its=ADV.open.filter(s=>s.group===all.dataset.advAll&&s.add);its.forEach(addSuggestion);touched();full();toast(`Added ${its.length} items to the estimate`);return;}
+  const b=e.target.closest("button[data-adv-act]");if(!b)return;const id=b.closest("[data-adv]").dataset.adv;const s=[...ADV.open,...ADV.dismissed].find(x=>x.id===id);if(!s)return;
+  const act=b.dataset.advAct;
+  if(act==="add"){const it=addSuggestion(s);touched();full();flashItem(it.uid);toast(`Added ${s.add.label}. Edit it to match the design.`);return;}
+  if(act==="edit"){const it=S.items.find(x=>x.uid===s.edit.uid);if(it)openEdit(it);return;}
+  if(act==="no"){S.dismissed=[...new Set([...(S.dismissed||[]),id])];touched();renderSheet();toast(`${s.title} marked not needed`);return;}
+  if(act==="restore"){S.dismissed=(S.dismissed||[]).filter(x=>x!==id);touched();renderSheet();return;}
+});
 $("groups").addEventListener("click",e=>{const b=e.target.closest("button[data-act]");if(!b)return;const id=b.closest("[data-uid]").dataset.uid;const it=S.items.find(x=>x.uid===id);if(!it)return;
-  if(b.dataset.act==="edit"){S.ui.editing=id;if(it.svc==="generic"||it.svc==="manual"){S.ui.view="generic";}else{S.ui.view=it.svc;S.ui.draft={svc:it.svc,region:it.region,label:it.label,cfg:Object.assign(defaults(it.svc),it.cfg)};}
-    save();full();$("cfg").scrollIntoView?.({behavior:"smooth",block:"start"});return;}
+  if(b.dataset.act==="edit"){openEdit(it);return;}
   if(b.dataset.act==="dup"){const c=JSON.parse(JSON.stringify(it));c.uid=uid();c.label=(it.label||itemName(it))+" (copy)";S.items.splice(S.items.indexOf(it)+1,0,c);touched();full();flashItem(c.uid);toast("Duplicated");return;}
   if(b.dataset.act==="del"){if(pendingRemove!==id){pendingRemove=id;renderSheet();setTimeout(()=>{if(pendingRemove===id){pendingRemove=null;renderSheet();}},4000);return;}
     pendingRemove=null;S.items=S.items.filter(x=>x.uid!==id);if(S.ui.editing===id){S.ui.editing=null;if(S.ui.view==="generic")S.ui.view="vm";S.ui.draft=newDraft(SVCMAP[S.ui.view]?S.ui.view:"vm");}touched();full();toast(`Removed ${itemName(it)}`);}
